@@ -859,31 +859,34 @@ function renderHist(){
 
 // ── RELATÓRIO ──
 function renderRel(){
+  const curSec=document.getElementById('relSec').value;
+  const curCat=document.getElementById('relCat').value;
   document.getElementById('relSec').innerHTML='<option value="">Todas</option>'+
-    secoes.map(s=>`<option value="${s.id}">Seção ${s.cod}${s.desc?' — '+s.desc:''}</option>`).join('');
-  // Listar todas as categorias únicas das seções (por catId real)
+    secoes.map(s=>`<option value="${s.id}"${s.id===curSec?' selected':''}>Seção ${s.cod}${s.desc?' — '+s.desc:''}</option>`).join('');
+  // Deduplica por tipo+obs (evita repetição entre seções)
   const catsMap={};
   secoes.forEach(s=>(s.categorias||[]).forEach(cat=>{
-    if(!catsMap[cat.id]){
+    const key=cat.tipo+(cat.obs||'');
+    if(!catsMap[key]){
       const ci=catInfo(cat.tipo);
       const lbl=cat.obs?ci.label+' / '+cat.obs:ci.label;
-      catsMap[cat.id]={id:cat.id,label:lbl,icon:ci.icon};
+      catsMap[key]={key,tipo:cat.tipo,obs:cat.obs||'',label:lbl,icon:ci.icon};
     }
   }));
   const catsArr=Object.values(catsMap).sort((a,b)=>a.label.localeCompare(b.label,'pt-BR'));
   document.getElementById('relCat').innerHTML='<option value="">Todas</option>'+
-    catsArr.map(c=>`<option value="${c.id}">${c.icon} ${c.label}</option>`).join('');
+    catsArr.map(c=>`<option value="${c.key}"${c.key===curCat?' selected':''}>${c.icon} ${c.label}</option>`).join('');
   try{gerarPrevia();}catch(e){console.error('gerarPrevia erro:',e);}
 }
 function filtrarRegs(){
   try{
     const sId=(document.getElementById('relSec')?.value)||'';
-    const cId=(document.getElementById('relCat')?.value)||'';
+    const cKey=(document.getElementById('relCat')?.value)||'';
     const dI=(document.getElementById('relDI')?.value)||'';
     const dF=(document.getElementById('relDF')?.value)||'';
     return regs.filter(r=>{
       if(sId&&r.secaoId!==sId)return false;
-      if(cId&&r.catId!==cId)return false;
+      if(cKey){const sec=getSec(r.secaoId);const cat=getCat(sec,r.catId);if(!cat||cat.tipo+(cat.obs||'')!==cKey)return false;}
       if(dI&&r.data<dI)return false;
       if(dF&&r.data>dF)return false;
       return true;
@@ -894,10 +897,10 @@ function montarRows(){
   try{
   const rFilt=filtrarRegs();
   const sId=(document.getElementById('relSec')?.value)||'';
-  const cId=(document.getElementById('relCat')?.value)||'';
+  const cKey=(document.getElementById('relCat')?.value)||'';
   const rows=[];
   (sId?secoes.filter(s=>s.id===sId):secoes).forEach(s=>{
-    (cId?(s.categorias||[]).filter(c=>c.id===cId):s.categorias||[]).forEach(cat=>{
+    (cKey?(s.categorias||[]).filter(c=>c.tipo+(c.obs||'')===cKey):s.categorias||[]).forEach(cat=>{
       const ci=catInfo(cat.tipo);
       (cat.atividades||[]).forEach(a=>{const info=getAtv(a.id);const ex=rFilt.filter(r=>r.secaoId===s.id&&r.catId===cat.id&&r.atvId===a.id).reduce((acc,r)=>acc+r.qtd,0);rows.push({secao:'Seção '+s.cod,descSec:s.desc||'',categoria:ci.label,catObs:cat.obs||'',atividade:info.nome,unid:info.unid,prev:a.qtdTotal||0,exec:ex,saldo:(a.qtdTotal||0)-ex,pct:pct(ex,a.qtdTotal||0)});});
     });
@@ -905,6 +908,12 @@ function montarRows(){
   return rows;
   }catch(e){console.error('montarRows erro:',e);return[];}
 }
+const nomeArquivo=()=>{
+  const di=document.getElementById('relDI')?.value||'';
+  const df=document.getElementById('relDF')?.value||'';
+  const fmt=d=>d?d.split('-').reverse().join(''):'';
+  return di||df?`Relatorio_de_Avanco_${fmt(di)||'inicio'}_a_${fmt(df)||'fim'}`:`Relatorio_de_Avanco_${fmt(hoje())}`;
+};
 function gerarPrevia(){
   const rows=montarRows();const el=document.getElementById('relPrevia');
   if(!rows.length){el.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Sem dados para os filtros selecionados.</div></div>';return;}
@@ -930,24 +939,25 @@ window.exportExcel=function(){
   ws1['!cols']=[{wch:10},{wch:20},{wch:16},{wch:16},{wch:28},{wch:7},{wch:11},{wch:11},{wch:10},{wch:8}];XLSX.utils.book_append_sheet(wb,ws1,'Resumo');
   const ws2=XLSX.utils.aoa_to_sheet([['HISTÓRICO'],[],['Data','Seção','Categoria','Atividade','Qtd.','Unid.','Usuário','Observações','Foto?'],...rFilt.map(r=>{const sec=getSec(r.secaoId);const cat=getCat(sec,r.catId);const ci=catInfo(cat?.tipo);const info=getAtv(r.atvId);return[fmtD(r.data),sec?'Seção '+sec.cod:'?',ci.label,info.nome,r.qtd,info.unid,r.usuario||'',r.obs||'',r.foto?'Sim':'Não'];})]);
   ws2['!cols']=[{wch:12},{wch:10},{wch:16},{wch:28},{wch:10},{wch:7},{wch:14},{wch:36},{wch:6}];XLSX.utils.book_append_sheet(wb,ws2,'Histórico');
-  XLSX.writeFile(wb,`InfraLog_${(cfg.nome||'Obra').replace(/\s/g,'_')}_${hoje()}.xlsx`);toast('Excel gerado! ✓');
+  XLSX.writeFile(wb,nomeArquivo()+'.xlsx');toast('Excel gerado! ✓');
 };
 
 window.exportPDF=function(){
   const rows=montarRows();if(!rows.length){alert('Sem dados.');return;}
   const rFilt=filtrarRegs().sort((a,b)=>(a.data||'').localeCompare(b.data||''));
-  let tG=0,eG=0;secoes.forEach(s=>(s.categorias||[]).forEach(cat=>(cat.atividades||[]).forEach(a=>{tG+=a.qtdTotal||0;eG+=execTot(s.id,cat.id,a.id);})));
-  const byCat={};secoes.forEach(s=>(s.categorias||[]).forEach(cat=>{const tipo=cat.tipo;if(!byCat[tipo])byCat[tipo]={label:catInfo(tipo).label,tot:0,exec:0};(cat.atividades||[]).forEach(a=>{byCat[tipo].tot+=a.qtdTotal||0;byCat[tipo].exec+=execTot(s.id,cat.id,a.id);});}));
+  let tG=0,eG=0;rows.forEach(r=>{tG+=r.prev;eG+=r.exec;});
+  const di=document.getElementById('relDI')?.value||'';
+  const df=document.getElementById('relDF')?.value||'';
+  const periodo=di||df?`Período: ${di?fmtD(di):'início'} a ${df?fmtD(df):'fim'}`:'';
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:10.5px;color:#0a1020;}.hd{background:#0a1020;color:#fff;padding:18px 22px;}.hd h1{font-size:18px;color:#00d4ff;font-weight:900;margin-bottom:3px;}.hd .sub{font-size:9.5px;color:#6b8aa0;}.pg{padding:16px 22px;}.meta{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:14px;}.mb{background:#f0f4f8;border-radius:5px;padding:9px 11px;border-left:3px solid #00d4ff;}.mb .l{font-size:8px;color:#888;text-transform:uppercase;}.mb .v{font-size:14px;font-weight:800;margin-top:2px;}h2{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#555;border-bottom:2px solid #00d4ff;padding-bottom:4px;margin:14px 0 9px;}table{width:100%;border-collapse:collapse;font-size:9.5px;margin-bottom:5px;}th{background:#0a1020;color:#fff;padding:6px 7px;text-align:left;font-size:8.5px;}td{padding:5px 7px;border-bottom:1px solid #e8eef4;}tr:nth-child(even) td{background:#f8fafc;}.badge{display:inline-block;background:#00d4ff;color:#000;font-weight:800;border-radius:4px;padding:1px 6px;font-size:8px;}.ft{margin-top:14px;padding:9px 22px;background:#f0f4f8;font-size:8px;color:#888;text-align:center;border-top:1px solid #dde4ed;}.foto-pdf{width:80px;height:60px;object-fit:cover;border-radius:4px;vertical-align:middle;}@media print{@page{margin:10mm;}}</style></head><body>
-<div class="hd"><h1>InfraLog — Relatório de Avanço</h1><div style="font-size:14px;color:#ccc;font-weight:700;margin-bottom:4px">${cfg.nome||'Obra'}</div><div class="sub">${cfg.contrato?'Contrato: '+cfg.contrato+' · ':''}Responsável: ${cfg.resp||'—'} · Emitido: ${fmtD(hoje())}</div></div>
-<div class="pg"><div class="meta"><div class="mb"><div class="l">Avanço Geral</div><div class="v" style="color:#0099cc">${pct(eG,tG)}%</div></div><div class="mb"><div class="l">Seções</div><div class="v">${secoes.length}</div></div><div class="mb"><div class="l">Lançamentos</div><div class="v">${regs.length}</div></div><div class="mb"><div class="l">Data</div><div class="v" style="font-size:10px">${fmtD(hoje())}</div></div></div>
-<h2>Por Categoria</h2><table><thead><tr><th>Categoria</th><th>Previsto</th><th>Executado</th><th>%</th></tr></thead><tbody>${Object.entries(byCat).filter(([,v])=>v.tot>0).map(([tipo,v])=>{const p=pct(v.exec,v.tot);const cor=p>=100?'#16a34a':p>=50?'#d97706':'#2563eb';return`<tr><td><b>${v.label}</b></td><td>${nF(v.tot)}</td><td style="color:#16a34a;font-weight:700">${nF(v.exec)}</td><td style="color:${cor};font-weight:700">${p}%</td></tr>`;}).join('')}</tbody></table>
+<div class="hd"><h1>InfraLog — Relatório de Avanço</h1><div style="font-size:14px;color:#ccc;font-weight:700;margin-bottom:4px">${cfg.nome||'Obra'}</div><div class="sub">${cfg.contrato?'Contrato: '+cfg.contrato+' · ':''}Responsável: ${cfg.resp||'—'} · Emitido: ${fmtD(hoje())}${periodo?' · '+periodo:''}</div></div>
+<div class="pg"><div class="meta"><div class="mb"><div class="l">Lançamentos</div><div class="v">${rFilt.length}</div></div><div class="mb"><div class="l">Seções</div><div class="v">${secoes.length}</div></div><div class="mb"><div class="l">Data</div><div class="v" style="font-size:10px">${fmtD(hoje())}</div></div>${periodo?`<div class="mb"><div class="l">Período</div><div class="v" style="font-size:9px">${di?fmtD(di):'—'} a ${df?fmtD(df):'—'}</div></div>`:'<div></div>'}</div>
 <h2>Detalhamento Seção / Categoria / Atividade</h2><table><thead><tr><th>Seção</th><th>Categoria</th><th>Atividade</th><th>Unid.</th><th>Previsto</th><th>Executado</th><th>Saldo</th><th>%</th></tr></thead><tbody>${rows.map(r=>{const cor=r.pct>=100?'#16a34a':r.pct>=50?'#d97706':'#2563eb';return`<tr><td><span class="badge">${r.secao.replace('Seção ','')}</span></td><td>${r.categoria}${r.catObs?' ('+r.catObs+')':''}</td><td>${r.atividade}</td><td>${r.unid}</td><td>${nF(r.prev)}</td><td style="color:#16a34a;font-weight:700">${nF(r.exec)}</td><td>${nF(r.saldo)}</td><td style="color:${cor};font-weight:700">${r.pct}%</td></tr>`;}).join('')}</tbody></table>
 <h2>Histórico com Fotos (${rFilt.length} lançamentos)</h2><table><thead><tr><th>Data</th><th>Seção</th><th>Categoria</th><th>Atividade</th><th>Qtd.</th><th>Usuário</th><th>Obs.</th><th>Foto</th></tr></thead><tbody>${rFilt.map(r=>{const sec=getSec(r.secaoId);const cat=getCat(sec,r.catId);const ci=catInfo(cat?.tipo);const info=getAtv(r.atvId);return`<tr><td>${fmtD(r.data)}</td><td>${sec?'Seção '+sec.cod:'?'}</td><td>${ci.label}</td><td>${info.nome}</td><td style="font-weight:700">${nF(r.qtd)} ${info.unid}</td><td style="color:#2563eb">${r.usuario||'—'}</td><td style="color:#888">${r.obs||'—'}</td><td>${r.foto?`<img src="${r.foto}" class="foto-pdf">`:'-'}</td></tr>`;}).join('')}</tbody></table>
 </div><div class="ft">InfraLog · ${cfg.nome||''} · ${cfg.resp||''} · ${new Date().toLocaleString('pt-BR')}</div></body></html>`;
   const blob=new Blob([html],{type:'text/html'});const url=URL.createObjectURL(blob);
   const w=window.open(url,'_blank');if(w)setTimeout(()=>w.print(),800);
-  else{const a=document.createElement('a');a.href=url;a.download=`InfraLog_${hoje()}.html`;a.click();}
+  else{const a=document.createElement('a');a.href=url;a.download=nomeArquivo()+'.html';a.click();}
   toast('PDF aberto — Imprimir → Salvar como PDF ✓');
 };
 
