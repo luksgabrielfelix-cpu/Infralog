@@ -8,174 +8,225 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
-  --bg:#080c14;--surface:#0f1520;--surface2:#151e2e;--surface3:#1c2740;
-  --border:#1e2d47;--accent:#00d4ff;--accent2:#0099cc;--green:#4ade80;
-  --blue:#60a5fa;--purple:#a78bfa;--orange:#fb923c;--danger:#f87171;
-  --text:#e2e8f0;--muted:#546e8a;--radius:13px;
+  --bg:#f0f4f8;
+  --surface:#ffffff;
+  --surface2:#e8eef5;
+  --surface3:#dce6f0;
+  --border:#c8d8e8;
+  --accent:#00d4ff;
+  --accent2:#0099cc;
+  --accent-dark:#006699;
+  --green:#16a34a;
+  --green-light:#dcfce7;
+  --blue:#2563eb;
+  --blue-light:#dbeafe;
+  --orange:#ea580c;
+  --orange-light:#ffedd5;
+  --purple:#7c3aed;
+  --purple-light:#ede9fe;
+  --danger:#dc2626;
+  --danger-light:#fee2e2;
+  --text:#0f172a;
+  --text2:#334155;
+  --muted:#64748b;
+  --radius:12px;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,.06);
+  --shadow-lg:0 4px 16px rgba(0,0,0,.12);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:90px;}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px;}
 
-.sync-bar{background:var(--surface2);border-bottom:1px solid var(--border);padding:5px 16px;display:flex;align-items:center;gap:6px;font-size:0.62rem;color:var(--muted);}
-.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .3s;}
-.sync-dot.online{background:var(--green);box-shadow:0 0 6px var(--green);}
-.sync-dot.syncing{background:var(--accent);}
+/* ── SYNC BAR ── */
+.sync-bar{background:var(--accent-dark);padding:4px 16px;display:flex;align-items:center;gap:6px;font-size:0.6rem;color:rgba(255,255,255,.7);}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4);flex-shrink:0;transition:background .3s;}
+.sync-dot.online{background:#4ade80;box-shadow:0 0 6px #4ade80;}
+.sync-dot.syncing{background:#fbbf24;}
 
-header{background:linear-gradient(135deg,#0a1020,#080c14);border-bottom:1px solid var(--border);padding:13px 16px;position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:10px;}
-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);}
-.logo-text{font-size:1.2rem;font-weight:800;letter-spacing:-0.5px;}
-.logo-text .i1{color:var(--accent);}
-.logo-text .i2{color:var(--text);}
-.obra-tag{margin-left:auto;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-family:'DM Mono',monospace;font-size:0.66rem;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* ── HEADER ── */
+header{background:linear-gradient(135deg,#006699,#0099cc);padding:14px 16px;position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:10px;box-shadow:0 2px 12px rgba(0,102,153,.3);}
+.logo-text{font-size:1.25rem;font-weight:800;letter-spacing:-0.5px;}
+.logo-text .i1{color:#00d4ff;}.logo-text .i2{color:#fff;}
+.obra-tag{margin-left:auto;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 12px;font-family:'DM Mono',monospace;font-size:0.64rem;color:rgba(255,255,255,.9);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
-.tabs{display:flex;overflow-x:auto;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:56px;z-index:99;scrollbar-width:none;}
-.tabs::-webkit-scrollbar{display:none;}
-.tab{flex:1;min-width:66px;padding:11px 4px;font-size:0.6rem;font-weight:700;letter-spacing:.4px;text-transform:uppercase;text-align:center;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:color .2s;}
-.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+/* ── BOTTOM TABS ── */
+.tabs{display:flex;background:var(--surface);border-top:1px solid var(--border);position:fixed;bottom:0;left:0;right:0;z-index:99;box-shadow:0 -2px 12px rgba(0,0,0,.08);}
+.tab{flex:1;padding:10px 4px 8px;font-size:0.55rem;font-weight:700;letter-spacing:.3px;text-transform:uppercase;text-align:center;border:none;background:none;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:color .2s;}
+.tab-icon{font-size:1.1rem;line-height:1;}
+.tab.active{color:var(--accent2);}
+.tab.active .tab-icon{filter:drop-shadow(0 0 4px rgba(0,153,204,.4));}
+.tab-indicator{width:20px;height:3px;background:var(--accent2);border-radius:2px;margin-top:1px;opacity:0;transition:opacity .2s;}
+.tab.active .tab-indicator{opacity:1;}
 
+/* ── PAGES ── */
 .page{display:none;padding:14px;}.page.active{display:block;}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px;}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px;box-shadow:var(--shadow);}
 .card-title{font-size:0.6rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
 
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:14px;}
-.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:11px 6px;text-align:center;}
-.stat-num{font-size:1.3rem;font-weight:800;color:var(--accent);line-height:1;}
-.stat-label{font-size:0.54rem;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-top:3px;}
+/* ── STATS ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 6px;text-align:center;box-shadow:var(--shadow);}
+.stat-num{font-size:1.3rem;font-weight:800;line-height:1;}
+.stat-label{font-size:0.52rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-top:3px;}
 
-.pb-wrap{background:rgba(0,0,0,.4);border-radius:100px;overflow:hidden;margin:4px 0;}
-.pb-fill{border-radius:100px;transition:width .5s ease;}
-.pb-h8{height:8px;}.pb-h14{height:14px;}
-.c-green{background:linear-gradient(90deg,#22c55e,#4ade80);}
-.c-yellow{background:linear-gradient(90deg,#f59e0b,#fbbf24);}
-.c-blue{background:linear-gradient(90deg,#3b82f6,#60a5fa);}
+/* ── PROGRESS ── */
+.pb-wrap{background:var(--surface2);border-radius:100px;overflow:hidden;margin:4px 0;}
+.pb-fill{border-radius:100px;transition:width .6s ease;}
+.pb-h6{height:6px;}.pb-h8{height:8px;}.pb-h12{height:12px;}
+.c-green{background:linear-gradient(90deg,#16a34a,#22c55e);}
+.c-yellow{background:linear-gradient(90deg,#d97706,#f59e0b);}
+.c-blue{background:linear-gradient(90deg,#1d4ed8,#3b82f6);}
 .c-cyan{background:linear-gradient(90deg,#0099cc,#00d4ff);}
 
-.cat-badge{display:inline-flex;align-items:center;gap:5px;border-radius:8px;padding:3px 9px;font-size:0.68rem;font-weight:700;}
-.cat-pavim{background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.35);color:var(--blue);}
-.cat-dren{background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.35);color:var(--green);}
-.cat-terra{background:rgba(251,146,60,.12);border:1px solid rgba(251,146,60,.35);color:var(--orange);}
-.cat-estac{background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.35);color:var(--purple);}
-.cat-custom{background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.35);color:var(--accent);}
+/* ── SEÇÃO DASHBOARD (compacto) ── */
+.secao-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px;}
+.secao-mini{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px;box-shadow:var(--shadow);cursor:pointer;}
+.secao-mini-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.secao-mini-cod{background:linear-gradient(135deg,#0099cc,#00d4ff);color:#fff;font-weight:800;font-size:0.7rem;border-radius:6px;padding:2px 8px;}
+.secao-mini-pct{font-family:'DM Mono',monospace;font-size:0.85rem;font-weight:700;}
+.secao-mini-desc{font-size:0.6rem;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
-.secao-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
+/* ── CATEGORIA BADGE ── */
+.cat-badge{display:inline-flex;align-items:center;gap:4px;border-radius:6px;padding:2px 8px;font-size:0.65rem;font-weight:700;}
+.cat-b-blue{background:var(--blue-light);color:var(--blue);}
+.cat-b-green{background:var(--green-light);color:var(--green);}
+.cat-b-orange{background:var(--orange-light);color:var(--orange);}
+.cat-b-purple{background:var(--purple-light);color:var(--purple);}
+.cat-b-cyan{background:#e0f7ff;color:var(--accent2);}
+.cat-b-default{background:var(--surface2);color:var(--text2);}
+
+/* ── SEÇÃO ITEMS ── */
+.secao-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;box-shadow:var(--shadow);overflow:hidden;}
 .secao-header{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;}
-.secao-cod{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#000;font-weight:800;font-size:0.76rem;border-radius:8px;padding:4px 10px;min-width:34px;text-align:center;}
-.secao-info{flex:1;min-width:0;}.secao-name{font-weight:700;font-size:0.86rem;}.secao-sub{font-size:0.6rem;color:var(--muted);margin-top:2px;}
-.secao-pct{font-family:'DM Mono',monospace;font-size:0.78rem;font-weight:700;min-width:38px;text-align:right;}
+.secao-cod{background:linear-gradient(135deg,#0099cc,#00d4ff);color:#fff;font-weight:800;font-size:0.76rem;border-radius:8px;padding:4px 10px;min-width:34px;text-align:center;}
+.secao-info{flex:1;min-width:0;}.secao-name{font-weight:700;font-size:0.86rem;color:var(--text);}.secao-sub{font-size:0.6rem;color:var(--muted);margin-top:2px;}
+.secao-pct{font-family:'DM Mono',monospace;font-size:0.8rem;font-weight:700;min-width:38px;text-align:right;}
 .secao-body{display:none;border-top:1px solid var(--border);}.secao-body.open{display:block;}
 .secao-actions{display:flex;gap:6px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surface2);}
 
 .cat-block{border-bottom:1px solid var(--border);padding:12px 14px;}.cat-block:last-child{border-bottom:none;}
 .cat-block-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
-.cat-block-pct{font-family:'DM Mono',monospace;font-size:0.82rem;font-weight:700;margin-left:auto;}
+.cat-block-pct{font-family:'DM Mono',monospace;font-size:0.8rem;font-weight:700;margin-left:auto;}
 
 .atv-row{display:flex;align-items:center;gap:7px;padding:8px 0;border-bottom:1px solid var(--border);}.atv-row:last-child{border-bottom:none;}
-.atv-info{flex:1;min-width:0;}.atv-nome{font-size:0.76rem;font-weight:600;}.atv-meta{font-family:'DM Mono',monospace;font-size:0.61rem;color:var(--muted);margin-top:1px;}
+.atv-info{flex:1;min-width:0;}.atv-nome{font-size:0.76rem;font-weight:600;color:var(--text);}.atv-meta{font-family:'DM Mono',monospace;font-size:0.61rem;color:var(--muted);margin-top:1px;}
 .atv-pct{font-family:'DM Mono',monospace;font-size:0.78rem;font-weight:700;min-width:38px;text-align:right;}
-.btn-lancar{background:var(--surface2);border:1px solid var(--border);color:var(--accent);border-radius:7px;padding:5px 8px;font-size:0.65rem;font-weight:700;cursor:pointer;white-space:nowrap;}
+.btn-lancar{background:var(--accent2);color:#fff;border:none;border-radius:7px;padding:5px 9px;font-family:'Syne',sans-serif;font-size:0.65rem;font-weight:700;cursor:pointer;white-space:nowrap;}
+.btn-lancar:active{opacity:.8;}
 
+/* ── FORMS ── */
 .form-group{margin-bottom:12px;}
 .form-label{font-size:0.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;display:block;}
-input,select,textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Syne',sans-serif;font-size:0.87rem;padding:10px 12px;outline:none;transition:border-color .2s;-webkit-appearance:none;}
-input:focus,select:focus,textarea:focus{border-color:var(--accent);}
-select option{background:var(--surface2);}
-.btn-primary{width:100%;background:linear-gradient(135deg,var(--accent2),var(--accent));color:#000;border:none;border-radius:10px;padding:13px;font-family:'Syne',sans-serif;font-size:0.87rem;font-weight:800;cursor:pointer;transition:opacity .2s;}
-.btn-primary:active{opacity:.8;}
-.btn-secondary{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px;font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;margin-bottom:10px;}
-.btn-sm-accent{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:var(--accent);border-radius:7px;padding:5px 10px;font-family:'Syne',sans-serif;font-size:0.68rem;font-weight:700;cursor:pointer;}
-.btn-sm-danger{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:var(--danger);border-radius:7px;padding:5px 10px;font-family:'Syne',sans-serif;font-size:0.68rem;font-weight:700;cursor:pointer;}
-.btn-danger{background:transparent;border:1px solid var(--danger);color:var(--danger);border-radius:7px;padding:5px 9px;font-size:0.66rem;font-weight:700;cursor:pointer;}
-.btn-export{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;border:none;border-radius:11px;font-family:'Syne',sans-serif;font-size:0.87rem;font-weight:800;cursor:pointer;width:100%;margin-bottom:10px;}
-.btn-pdf{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;}
-.btn-excel{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;}
+input,select,textarea{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:'Syne',sans-serif;font-size:0.87rem;padding:10px 12px;outline:none;transition:border-color .2s;-webkit-appearance:none;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(0,153,204,.1);}
+select option{background:var(--surface);}
 
+.btn-primary{width:100%;background:linear-gradient(135deg,#0099cc,#00d4ff);color:#fff;border:none;border-radius:10px;padding:13px;font-family:'Syne',sans-serif;font-size:0.87rem;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(0,153,204,.3);transition:opacity .2s;}
+.btn-primary:active{opacity:.85;}
+.btn-secondary{width:100%;background:var(--surface);border:1.5px solid var(--border);color:var(--text2);border-radius:10px;padding:11px;font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;margin-bottom:10px;}
+.btn-sm-accent{background:var(--blue-light);border:none;color:var(--blue);border-radius:7px;padding:5px 10px;font-family:'Syne',sans-serif;font-size:0.68rem;font-weight:700;cursor:pointer;}
+.btn-sm-danger{background:var(--danger-light);border:none;color:var(--danger);border-radius:7px;padding:5px 10px;font-family:'Syne',sans-serif;font-size:0.68rem;font-weight:700;cursor:pointer;}
+.btn-export{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;border:none;border-radius:11px;font-family:'Syne',sans-serif;font-size:0.87rem;font-weight:800;cursor:pointer;width:100%;margin-bottom:10px;box-shadow:var(--shadow);}
+.btn-pdf{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;}
+.btn-excel{background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;}
+.btn-danger-full{width:100%;background:var(--surface);border:1.5px solid var(--danger);color:var(--danger);border-radius:8px;padding:12px;font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;}
+
+/* ── CHIPS ── */
 .chip-select{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
-.chip{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 11px;font-size:0.69rem;cursor:pointer;transition:all .2s;}
-.chip.selected{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700;}
+.chip{background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;font-size:0.69rem;cursor:pointer;transition:all .15s;color:var(--text2);font-family:'Syne',sans-serif;font-weight:600;}
+.chip.selected{background:var(--accent2);color:#fff;border-color:var(--accent2);}
+.chip:active{opacity:.7;}
 
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;align-items:flex-end;justify-content:center;}
+/* ── ACORDEÃO CONFIG ── */
+.accordion-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;box-shadow:var(--shadow);overflow:hidden;}
+.accordion-header{display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;user-select:none;}
+.accordion-icon{font-size:1.1rem;}
+.accordion-title{flex:1;font-weight:700;font-size:0.9rem;color:var(--text);}
+.accordion-arrow{color:var(--muted);font-size:0.8rem;transition:transform .2s;}
+.accordion-item.open .accordion-arrow{transform:rotate(180deg);}
+.accordion-body{display:none;border-top:1px solid var(--border);padding:14px;}
+.accordion-item.open .accordion-body{display:block;}
+
+/* ── MODAIS ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:200;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px);}
 .modal-overlay.open{display:flex;}
-.modal{background:var(--surface);border-radius:20px 20px 0 0;border-top:2px solid var(--accent);padding:20px 16px 34px;width:100%;max-height:92vh;overflow-y:auto;}
-.modal-title{font-size:1rem;font-weight:800;margin-bottom:3px;}
+.modal{background:var(--surface);border-radius:20px 20px 0 0;border-top:3px solid var(--accent2);padding:20px 16px 34px;width:100%;max-height:92vh;overflow-y:auto;box-shadow:0 -8px 32px rgba(0,0,0,.15);}
+.modal-title{font-size:1rem;font-weight:800;margin-bottom:3px;color:var(--text);}
 .modal-sub{font-size:0.7rem;color:var(--muted);margin-bottom:16px;font-family:'DM Mono',monospace;}
-.modal-close{float:right;background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;}
+.modal-close{float:right;background:var(--surface2);border:none;color:var(--muted);font-size:1rem;width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 
-/* FOTO */
-.foto-upload-area{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s;position:relative;}
-.foto-upload-area:active{border-color:var(--accent);}
-.foto-upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-.foto-preview{width:100%;border-radius:10px;margin-top:8px;max-height:200px;object-fit:cover;display:none;}
-.foto-thumb{width:70px;height:70px;border-radius:8px;object-fit:cover;cursor:pointer;border:2px solid var(--border);}
-.foto-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);border-radius:20px;padding:2px 8px;font-size:0.6rem;color:var(--accent);margin-top:4px;cursor:pointer;}
-
-/* MODAL FOTO GRANDE */
-.foto-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:300;align-items:center;justify-content:center;}
-.foto-modal.open{display:flex;}
-.foto-modal img{max-width:95vw;max-height:90vh;border-radius:10px;object-fit:contain;}
-.foto-modal-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.1);border:none;color:#fff;font-size:1.5rem;width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-
-.hist-item{background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--accent);}
+/* ── HISTÓRICO ── */
+.hist-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:8px;border-left:3px solid var(--accent2);box-shadow:var(--shadow);}
 .tag{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:2px 8px;font-size:0.57rem;color:var(--muted);margin:2px;font-family:'DM Mono',monospace;}
-.empty{text-align:center;padding:36px 20px;color:var(--muted);}.empty-icon{font-size:2.5rem;margin-bottom:10px;}.empty-text{font-size:0.8rem;line-height:1.6;}
+.empty{text-align:center;padding:40px 20px;color:var(--muted);}
+.empty-icon{font-size:2.5rem;margin-bottom:10px;}
+.empty-text{font-size:0.82rem;line-height:1.6;}
 .divider{font-size:0.57rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:10px 0 6px;border-bottom:1px solid var(--border);margin-bottom:10px;}
 .input-row{display:flex;gap:8px;}.input-row>*{flex:1;}
-.secao-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px;}
-.secao-mini{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:11px;}
-.secao-mini .cod{font-size:0.7rem;font-weight:800;color:var(--accent);}.secao-mini .mpct{font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:700;margin:4px 0 5px;}
-.cat-entry{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;}
+.cat-entry{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;}
 .cat-entry-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .atv-edit-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);}.atv-edit-row:last-child{border-bottom:none;}
 
-.loading-screen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;}
+/* ── FOTO ── */
+.foto-upload-area{border:2px dashed var(--border);border-radius:10px;padding:18px;text-align:center;cursor:pointer;position:relative;background:var(--surface2);}
+.foto-upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.foto-preview{width:100%;border-radius:8px;margin-top:8px;max-height:200px;object-fit:cover;display:none;}
+.foto-thumb{width:64px;height:64px;border-radius:8px;object-fit:cover;cursor:pointer;border:2px solid var(--border);}
+.btn-foto-src{flex:1;background:var(--surface2);border:1.5px solid var(--border);color:var(--text2);border-radius:9px;padding:10px 6px;font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;}
+.btn-foto-src:active{background:var(--surface3);border-color:var(--accent);color:var(--accent-dark);}
+.foto-ts-badge{font-size:0.6rem;color:var(--muted);margin-top:5px;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:4px;}
+.foto-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:300;align-items:center;justify-content:center;}
+.foto-modal.open{display:flex;}
+.foto-modal img{max-width:95vw;max-height:90vh;border-radius:10px;object-fit:contain;}
+.foto-modal-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:1.2rem;width:36px;height:36px;border-radius:50%;cursor:pointer;}
+
+/* ── LOADING ── */
+.loading-screen{position:fixed;inset:0;background:linear-gradient(135deg,#006699,#003d5c);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;}
 .loading-screen.hidden{display:none;}
-.spinner{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+.spinner{width:44px;height:44px;border:3px solid rgba(255,255,255,.2);border-top-color:#00d4ff;border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 @keyframes fadeUp{from{opacity:0;transform:translate(-50%,10px);}to{opacity:1;transform:translate(-50%,0);}}
 
-/* PROGRESS UPLOAD */
-.upload-progress{background:var(--surface2);border-radius:8px;padding:10px 12px;margin-top:8px;display:none;}
-.upload-progress.show{display:block;}
-.upload-bar{height:6px;background:var(--bg);border-radius:100px;overflow:hidden;margin-top:6px;}
-.upload-bar-fill{height:6px;background:var(--accent);border-radius:100px;transition:width .3s;}
-.btn-foto-src{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:10px 6px;font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;}
-.btn-foto-src:active{background:var(--surface3);border-color:var(--accent);color:var(--accent);}
-.foto-ts-badge{font-size:0.6rem;color:var(--muted);margin-top:5px;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:4px;}
+/* ── RELATÓRIO PRÉVIA ── */
+.rel-table{width:100%;border-collapse:collapse;font-size:0.72rem;}
+.rel-table th{background:var(--surface2);padding:7px 8px;text-align:left;border-bottom:2px solid var(--border);color:var(--muted);font-size:0.6rem;letter-spacing:.8px;text-transform:uppercase;}
+.rel-table td{padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text2);}
+.rel-table tr:hover td{background:var(--surface2);}
 </style>
 </head>
 <body>
 
 <!-- LOADING -->
 <div class="loading-screen" id="loadingScreen">
-  <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style="filter:drop-shadow(0 0 10px rgba(0,212,255,.6))">
+  <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style="filter:drop-shadow(0 0 12px rgba(0,212,255,.6))">
     <rect x="4" y="28" width="8" height="20" rx="2" fill="#00d4ff" opacity="0.5"/>
     <rect x="16" y="20" width="8" height="28" rx="2" fill="#00d4ff" opacity="0.7"/>
     <rect x="28" y="10" width="8" height="38" rx="2" fill="#00d4ff"/>
     <rect x="40" y="18" width="8" height="30" rx="2" fill="#00d4ff" opacity="0.8"/>
-    <path d="M8 24 L20 16 L32 6 L44 14" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
-    <circle cx="8" cy="24" r="3" fill="#00d4ff"/><circle cx="20" cy="16" r="3" fill="#00d4ff"/>
-    <circle cx="32" cy="6" r="3" fill="#00d4ff"/><circle cx="44" cy="14" r="3" fill="#00d4ff"/>
+    <path d="M8 24 L20 16 L32 6 L44 14" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
   </svg>
-  <div style="font-size:1.8rem;font-weight:800;letter-spacing:-1px"><span style="color:var(--accent)">Infra</span><span style="color:var(--text)">Log</span></div>
+  <div style="font-size:1.8rem;font-weight:800;letter-spacing:-1px;color:#fff"><span style="color:#00d4ff">Infra</span>Log</div>
   <div class="spinner"></div>
-  <div style="font-size:0.78rem;color:var(--muted)">Conectando ao servidor...</div>
+  <div style="font-size:0.78rem;color:rgba(255,255,255,.6)">Conectando ao servidor...</div>
 </div>
 
 <!-- MODAL USUÁRIO -->
-<div class="modal-overlay" id="modalUser">
+<div class="modal-overlay open" id="modalUser">
   <div class="modal">
-    <div style="text-align:center;margin-bottom:18px">
-      <svg width="48" height="48" viewBox="0 0 56 56" fill="none" style="margin:0 auto 10px;display:block;filter:drop-shadow(0 0 8px rgba(0,212,255,.5))">
+    <div style="text-align:center;margin-bottom:20px">
+      <svg width="48" height="48" viewBox="0 0 56 56" fill="none" style="margin:0 auto 12px;display:block;filter:drop-shadow(0 0 8px rgba(0,212,255,.4))">
         <rect x="4" y="28" width="8" height="20" rx="2" fill="#00d4ff" opacity="0.5"/>
         <rect x="16" y="20" width="8" height="28" rx="2" fill="#00d4ff" opacity="0.7"/>
         <rect x="28" y="10" width="8" height="38" rx="2" fill="#00d4ff"/>
         <rect x="40" y="18" width="8" height="30" rx="2" fill="#00d4ff" opacity="0.8"/>
-        <path d="M8 24 L20 16 L32 6 L44 14" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+        <path d="M8 24 L20 16 L32 6 L44 14" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
       </svg>
-      <div style="font-size:1.4rem;font-weight:800"><span style="color:var(--accent)">Infra</span><span style="color:var(--text)">Log</span></div>
+      <div style="font-size:1.6rem;font-weight:800;letter-spacing:-1px"><span style="color:#0099cc">Infra</span>Log</div>
       <div style="font-size:0.72rem;color:var(--muted);margin-top:4px">Gestão de Obras em Campo</div>
     </div>
     <div class="modal-title">👷 Identificação</div>
-    <div class="modal-sub">Seu nome aparecerá nos registros da equipe</div>
+    <div class="modal-sub">Seu nome aparecerá nos registros</div>
     <div class="form-group"><label class="form-label">Seu Nome</label><input type="text" id="inputUserName" placeholder="Ex: Lucas, João..." maxlength="30"></div>
     <button class="btn-primary" onclick="confirmarUsuario()">Entrar no InfraLog →</button>
   </div>
@@ -186,7 +237,7 @@ select option{background:var(--surface2);}
   <div class="sync-bar">
     <div class="sync-dot" id="syncDot"></div>
     <span id="syncStatus">Conectando...</span>
-    <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent)" id="userLabel"></span>
+    <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:0.6rem;color:rgba(255,255,255,.8)" id="userLabel"></span>
   </div>
   <header>
     <svg width="28" height="28" viewBox="0 0 56 56" fill="none" style="filter:drop-shadow(0 0 6px rgba(0,212,255,.5));flex-shrink:0">
@@ -194,32 +245,34 @@ select option{background:var(--surface2);}
       <rect x="16" y="20" width="8" height="28" rx="2" fill="#00d4ff" opacity="0.7"/>
       <rect x="28" y="10" width="8" height="38" rx="2" fill="#00d4ff"/>
       <rect x="40" y="18" width="8" height="30" rx="2" fill="#00d4ff" opacity="0.8"/>
-      <path d="M8 24 L20 16 L32 6 L44 14" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+      <path d="M8 24 L20 16 L32 6 L44 14" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
     </svg>
     <div class="logo-text"><span class="i1">Infra</span><span class="i2">Log</span></div>
     <div class="obra-tag" id="obraTag">—</div>
   </header>
 
-  <div class="tabs">
-    <button class="tab active" onclick="nav('dashboard')">📊 Visão</button>
-    <button class="tab" onclick="nav('secoes')">📍 Seções</button>
-    <button class="tab" onclick="nav('lancar')">✏️ Lançar</button>
-    <button class="tab" onclick="nav('historico')">🕓 Histórico</button>
-    <button class="tab" onclick="nav('relatorio')">📄 Relatório</button>
-    <button class="tab" onclick="nav('config')">⚙️ Config</button>
-  </div>
-
   <!-- DASHBOARD -->
   <div id="page-dashboard" class="page active">
     <div class="stats-row" id="statsRow"></div>
-    <div class="card"><div class="card-title">Avanço Geral da Obra</div><div id="dashPct" style="font-size:2rem;font-weight:800;color:var(--accent)">0%</div><div class="pb-wrap pb-h14" style="margin-top:8px"><div class="pb-fill c-cyan" id="dashBar" style="width:0%"></div></div></div>
-    <div class="card-title">Por Seção</div><div class="secao-grid" id="secaoGrid"></div>
+    <div class="card">
+      <div class="card-title">Avanço Geral</div>
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px">
+        <div id="dashPct" style="font-size:2.2rem;font-weight:800;color:var(--accent2)">0%</div>
+        <div id="dashLabel" style="font-size:0.72rem;color:var(--muted)">da obra concluído</div>
+      </div>
+      <div class="pb-wrap pb-h12"><div class="pb-fill c-cyan" id="dashBar" style="width:0%"></div></div>
+    </div>
+    <div class="card-title" style="margin-top:4px">Seções</div>
+    <div class="secao-grid" id="secaoGrid"></div>
     <div class="card"><div class="card-title">Por Categoria</div><div id="catDash"></div></div>
     <div class="card"><div class="card-title">Por Atividade</div><div id="atvDash"></div></div>
   </div>
 
   <!-- SEÇÕES -->
-  <div id="page-secoes" class="page"><div class="card-title">Seções Cadastradas</div><div id="secoesList"></div></div>
+  <div id="page-secoes" class="page">
+    <div class="card-title">Seções Cadastradas</div>
+    <div id="secoesList"></div>
+  </div>
 
   <!-- LANÇAR -->
   <div id="page-lancar" class="page">
@@ -228,8 +281,10 @@ select option{background:var(--surface2);}
       <div class="form-group"><label class="form-label">Seção</label><select id="rSecao" onchange="rLoadCat()"></select></div>
       <div class="form-group"><label class="form-label">Categoria</label><select id="rCat" onchange="rLoadAtv()"></select></div>
       <div class="form-group"><label class="form-label">Atividade</label><select id="rAtv" onchange="rLoadUnid()"></select></div>
-      <div class="form-group"><label class="form-label">Quantidade Executada</label><div class="input-row"><input type="number" id="rQtd" placeholder="0" min="0" step="0.01"><input type="text" id="rUnid" readonly style="max-width:78px"></div></div>
-      <div class="form-group"><label class="form-label">Data de Execução</label><input type="date" id="rData"></div>
+      <div class="form-group"><label class="form-label">Quantidade Executada</label>
+        <div class="input-row"><input type="number" id="rQtd" placeholder="0" min="0" step="0.01"><input type="text" id="rUnid" readonly style="max-width:78px"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Data</label><input type="date" id="rData"></div>
       <div class="form-group"><label class="form-label">Observações (opcional)</label><textarea id="rObs" rows="2" placeholder="Ex: Chuva à tarde, solo mole..."></textarea></div>
       <div class="form-group">
         <label class="form-label">📷 Foto (opcional)</label>
@@ -243,10 +298,6 @@ select option{background:var(--surface2);}
           <img id="fotoPreviewLancar" class="foto-preview" style="display:block">
           <div class="foto-ts-badge" id="fotoTsLancarDisplay"></div>
           <button style="margin-top:4px;font-size:0.7rem;background:none;border:none;color:var(--danger);cursor:pointer" onclick="removerFoto('Lancar')">✕ Remover foto</button>
-        </div>
-        <div class="upload-progress" id="uploadProgressLancar">
-          <div style="font-size:0.72rem;color:var(--muted)" id="uploadTxtLancar">Comprimindo foto...</div>
-          <div class="upload-bar"><div class="upload-bar-fill" id="uploadBarLancar" style="width:0%"></div></div>
         </div>
       </div>
       <button class="btn-primary" onclick="lancar()">✓ REGISTRAR EXECUÇÃO</button>
@@ -268,94 +319,144 @@ select option{background:var(--surface2);}
       <div class="form-group"><label class="form-label">Data Início</label><input type="date" id="relDI" onchange="gerarPrevia()"></div>
       <div class="form-group"><label class="form-label">Data Fim</label><input type="date" id="relDF" onchange="gerarPrevia()"></div>
     </div>
-    <button class="btn-export btn-pdf" onclick="exportPDF()">📄 Exportar Relatório PDF</button>
-    <button class="btn-export btn-excel" onclick="exportExcel()">📊 Exportar Planilha Excel</button>
-    <div class="card"><div class="card-title">Prévia</div><div id="relPrevia"></div></div>
+    <button class="btn-export btn-pdf" onclick="exportPDF()">📄 Exportar PDF</button>
+    <button class="btn-export btn-excel" onclick="exportExcel()">📊 Exportar Excel</button>
+    <div class="card"><div class="card-title">Prévia</div><div style="overflow-x:auto"><div id="relPrevia"></div></div></div>
   </div>
 
-  <!-- CONFIG -->
+  <!-- CONFIG (acordeão) -->
   <div id="page-config" class="page">
-    <div class="card">
-      <div class="card-title">Dados da Obra</div>
-      <div class="form-group"><label class="form-label">Nome da Obra</label><input type="text" id="cNome" placeholder="Pavimentação Av. Central"></div>
-      <div class="form-group"><label class="form-label">Responsável</label><input type="text" id="cResp" placeholder="Seu nome"></div>
-      <div class="form-group"><label class="form-label">Contrato / ART Nº</label><input type="text" id="cContrato" placeholder="Nº do contrato"></div>
-      <button class="btn-primary" onclick="salvarCfg()">Salvar</button>
-    </div>
 
-    <div class="card" style="margin-top:4px">
-      <div class="card-title">🔧 Atividades</div>
-      <p style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Todas as atividades — padrão e personalizadas — podem ser editadas.</p>
-      <div id="listaAtividades"></div>
-      <div class="divider" style="margin-top:14px">Adicionar Nova Atividade</div>
-      <div class="form-group"><label class="form-label">Nome da Atividade</label><input type="text" id="nsNome" placeholder="Ex: Sarjeta de Concreto..."></div>
-      <div class="form-group">
-        <label class="form-label">Unidade de Medida</label>
-        <div class="chip-select" id="unidChips">
-          <div class="chip" onclick="selUnid(this,'m³')">m³</div><div class="chip" onclick="selUnid(this,'m²')">m²</div>
-          <div class="chip" onclick="selUnid(this,'m')">m</div><div class="chip" onclick="selUnid(this,'t')">t</div>
-          <div class="chip" onclick="selUnid(this,'un')">un</div><div class="chip" onclick="selUnid(this,'kg')">kg</div>
-          <div class="chip" onclick="selUnid(this,'vb')">vb</div>
-        </div>
-        <input type="text" id="nsUnid" placeholder="Ou digite outra..." style="margin-top:8px">
+    <!-- Dados da Obra -->
+    <div class="accordion-item" id="acc-obra">
+      <div class="accordion-header" onclick="toggleAcc('acc-obra')">
+        <span class="accordion-icon">🏢</span>
+        <span class="accordion-title">Dados da Obra</span>
+        <span class="accordion-arrow">▾</span>
       </div>
-      <button class="btn-primary" onclick="addAtividade()">+ Adicionar Atividade</button>
-    </div>
-
-    <div class="card" style="margin-top:4px">
-      <div class="card-title">🏷️ Categorias</div>
-      <p style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Crie e edite as categorias disponíveis para suas seções.</p>
-      <div id="listaCategorias"></div>
-      <div class="divider" style="margin-top:14px">Adicionar Nova Categoria</div>
-      <div class="form-group"><label class="form-label">Nome da Categoria</label><input type="text" id="ncNome" placeholder="Ex: Drenagem, Contenção, Sinalização..."></div>
-      <div class="form-group">
-        <label class="form-label">Ícone</label>
-        <div class="chip-select" id="iconChips">
-          <div class="chip" onclick="selIcon(this,'🛣️')">🛣️</div>
-          <div class="chip" onclick="selIcon(this,'💧')">💧</div>
-          <div class="chip" onclick="selIcon(this,'🏗️')">🏗️</div>
-          <div class="chip" onclick="selIcon(this,'🅿️')">🅿️</div>
-          <div class="chip" onclick="selIcon(this,'🚧')">🚧</div>
-          <div class="chip" onclick="selIcon(this,'⚡')">⚡</div>
-          <div class="chip" onclick="selIcon(this,'🌿')">🌿</div>
-          <div class="chip" onclick="selIcon(this,'🔩')">🔩</div>
-          <div class="chip" onclick="selIcon(this,'🧱')">🧱</div>
-          <div class="chip" onclick="selIcon(this,'🚰')">🚰</div>
-          <div class="chip" onclick="selIcon(this,'💡')">💡</div>
-          <div class="chip" onclick="selIcon(this,'📐')">📐</div>
-          <div class="chip" onclick="selIcon(this,'⚙️')">⚙️</div>
-        </div>
+      <div class="accordion-body">
+        <div class="form-group"><label class="form-label">Nome da Obra</label><input type="text" id="cNome" placeholder="Pavimentação Av. Central"></div>
+        <div class="form-group"><label class="form-label">Responsável</label><input type="text" id="cResp" placeholder="Seu nome"></div>
+        <div class="form-group"><label class="form-label">Contrato / ART Nº</label><input type="text" id="cContrato" placeholder="Nº do contrato"></div>
+        <button class="btn-primary" onclick="salvarCfg()">Salvar</button>
       </div>
-      <button class="btn-primary" onclick="addCategoria()">+ Adicionar Categoria</button>
     </div>
 
-    <div class="card" style="margin-top:4px">
-      <div class="card-title">📍 Cadastrar Nova Seção</div>
-      <div class="form-group"><label class="form-label">Código</label><input type="text" id="sCod" placeholder="A" maxlength="6" style="text-transform:uppercase"></div>
-      <div class="form-group"><label class="form-label">Descrição (opcional)</label><input type="text" id="sDesc" placeholder="Ex: Trecho Rua das Flores"></div>
-      <div class="divider" style="margin-top:4px">Categorias desta Seção</div>
-      <p style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Ex: Pavimentação, Drenagem, Terraplanagem...</p>
-      <div id="catEntries"></div>
-      <button class="btn-secondary" onclick="addCatEntry()">+ Adicionar Categoria</button>
-      <button class="btn-primary" onclick="salvarSecao()">✓ Salvar Seção</button>
+    <!-- Atividades -->
+    <div class="accordion-item" id="acc-atv">
+      <div class="accordion-header" onclick="toggleAcc('acc-atv')">
+        <span class="accordion-icon">🔧</span>
+        <span class="accordion-title">Atividades</span>
+        <span class="accordion-arrow">▾</span>
+      </div>
+      <div class="accordion-body">
+        <p style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Todas as atividades podem ser editadas. Clique ✏️ para editar.</p>
+        <div id="listaAtividades"></div>
+        <div class="divider" style="margin-top:14px">Adicionar Nova Atividade</div>
+        <div class="form-group"><label class="form-label">Nome</label><input type="text" id="nsNome" placeholder="Ex: Sarjeta de Concreto..."></div>
+        <div class="form-group">
+          <label class="form-label">Unidade</label>
+          <div class="chip-select" id="unidChips">
+            <div class="chip" onclick="selUnid(this,'m³')">m³</div><div class="chip" onclick="selUnid(this,'m²')">m²</div>
+            <div class="chip" onclick="selUnid(this,'m')">m</div><div class="chip" onclick="selUnid(this,'t')">t</div>
+            <div class="chip" onclick="selUnid(this,'un')">un</div><div class="chip" onclick="selUnid(this,'kg')">kg</div>
+            <div class="chip" onclick="selUnid(this,'vb')">vb</div>
+          </div>
+          <input type="text" id="nsUnid" placeholder="Ou digite outra..." style="margin-top:8px">
+        </div>
+        <button class="btn-primary" onclick="addAtividade()">+ Adicionar Atividade</button>
+      </div>
     </div>
 
-    <div class="card" style="margin-top:4px"><div class="card-title">Seções Cadastradas</div><div id="cfgSecList"></div></div>
+    <!-- Categorias -->
+    <div class="accordion-item" id="acc-cat">
+      <div class="accordion-header" onclick="toggleAcc('acc-cat')">
+        <span class="accordion-icon">🏷️</span>
+        <span class="accordion-title">Categorias</span>
+        <span class="accordion-arrow">▾</span>
+      </div>
+      <div class="accordion-body">
+        <p style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Crie e edite as categorias disponíveis para suas seções.</p>
+        <div id="listaCategorias"></div>
+        <div class="divider" style="margin-top:14px">Adicionar Nova Categoria</div>
+        <div class="form-group"><label class="form-label">Nome</label><input type="text" id="ncNome" placeholder="Ex: Drenagem, Contenção..."></div>
+        <div class="form-group">
+          <label class="form-label">Ícone</label>
+          <div class="chip-select" id="iconChips">
+            <div class="chip" onclick="selIcon(this,'🛣️')">🛣️</div><div class="chip" onclick="selIcon(this,'💧')">💧</div>
+            <div class="chip" onclick="selIcon(this,'🏗️')">🏗️</div><div class="chip" onclick="selIcon(this,'🅿️')">🅿️</div>
+            <div class="chip" onclick="selIcon(this,'🚧')">🚧</div><div class="chip" onclick="selIcon(this,'⚡')">⚡</div>
+            <div class="chip" onclick="selIcon(this,'🌿')">🌿</div><div class="chip" onclick="selIcon(this,'🔩')">🔩</div>
+            <div class="chip" onclick="selIcon(this,'🧱')">🧱</div><div class="chip" onclick="selIcon(this,'🚰')">🚰</div>
+            <div class="chip" onclick="selIcon(this,'💡')">💡</div><div class="chip" onclick="selIcon(this,'📐')">📐</div>
+            <div class="chip" onclick="selIcon(this,'⚙️')">⚙️</div>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="addCategoria()">+ Adicionar Categoria</button>
+      </div>
+    </div>
 
-    <div class="card" style="margin-top:4px;border-color:var(--danger)">
-      <div class="card-title" style="color:var(--danger)">⚠️ Zona de Perigo</div>
-      <button class="btn-danger" style="width:100%;padding:12px" onclick="resetTudo()">🗑 Apagar todos os registros</button>
+    <!-- Seções -->
+    <div class="accordion-item" id="acc-sec">
+      <div class="accordion-header" onclick="toggleAcc('acc-sec')">
+        <span class="accordion-icon">📍</span>
+        <span class="accordion-title">Cadastrar Nova Seção</span>
+        <span class="accordion-arrow">▾</span>
+      </div>
+      <div class="accordion-body">
+        <div class="form-group"><label class="form-label">Código</label><input type="text" id="sCod" placeholder="A" maxlength="6" style="text-transform:uppercase"></div>
+        <div class="form-group"><label class="form-label">Descrição (opcional)</label><input type="text" id="sDesc" placeholder="Ex: Trecho Rua das Flores"></div>
+        <div class="divider" style="margin-top:4px">Categorias desta Seção</div>
+        <p style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Cada categoria tem suas próprias atividades e quantidades.</p>
+        <div id="catEntries"></div>
+        <button class="btn-secondary" onclick="addCatEntry()">+ Adicionar Categoria</button>
+        <button class="btn-primary" onclick="salvarSecao()">✓ Salvar Seção</button>
+      </div>
+    </div>
+
+    <!-- Seções cadastradas -->
+    <div class="accordion-item" id="acc-seclist">
+      <div class="accordion-header" onclick="toggleAcc('acc-seclist')">
+        <span class="accordion-icon">📋</span>
+        <span class="accordion-title">Seções Cadastradas</span>
+        <span class="accordion-arrow">▾</span>
+      </div>
+      <div class="accordion-body">
+        <div id="cfgSecList"></div>
+      </div>
+    </div>
+
+    <!-- Perigo -->
+    <div class="accordion-item" id="acc-danger" style="border-color:var(--danger)">
+      <div class="accordion-header" onclick="toggleAcc('acc-danger')">
+        <span class="accordion-icon">⚠️</span>
+        <span class="accordion-title" style="color:var(--danger)">Zona de Perigo</span>
+        <span class="accordion-arrow">▾</span>
+      </div>
+      <div class="accordion-body">
+        <button class="btn-danger-full" onclick="resetTudo()">🗑 Apagar todos os registros de execução</button>
+      </div>
     </div>
   </div>
+</div><!-- fim appShell -->
+
+<!-- BOTTOM TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="nav('dashboard')"><span class="tab-icon">📊</span><span>Visão</span><div class="tab-indicator"></div></button>
+  <button class="tab" onclick="nav('secoes')"><span class="tab-icon">📍</span><span>Seções</span><div class="tab-indicator"></div></button>
+  <button class="tab" onclick="nav('lancar')"><span class="tab-icon">✏️</span><span>Lançar</span><div class="tab-indicator"></div></button>
+  <button class="tab" onclick="nav('historico')"><span class="tab-icon">🕓</span><span>Histórico</span><div class="tab-indicator"></div></button>
+  <button class="tab" onclick="nav('relatorio')"><span class="tab-icon">📄</span><span>Relatório</span><div class="tab-indicator"></div></button>
+  <button class="tab" onclick="nav('config')"><span class="tab-icon">⚙️</span><span>Config</span><div class="tab-indicator"></div></button>
 </div>
 
-<!-- MODAL LANÇAR (atalho da seção) -->
+<!-- MODAIS -->
 <div class="modal-overlay" id="modalLancar">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('modalLancar')">✕</button>
     <div class="modal-title" id="mlTitle">Registrar</div>
     <div class="modal-sub" id="mlSub"></div>
-    <div class="form-group"><label class="form-label">Quantidade Executada</label><div class="input-row"><input type="number" id="mlQtd" placeholder="0" min="0" step="0.01"><input type="text" id="mlUnid" readonly style="max-width:78px"></div></div>
+    <div class="form-group"><label class="form-label">Quantidade</label><div class="input-row"><input type="number" id="mlQtd" placeholder="0" min="0" step="0.01"><input type="text" id="mlUnid" readonly style="max-width:78px"></div></div>
     <div class="form-group"><label class="form-label">Data</label><input type="date" id="mlData"></div>
     <div class="form-group"><label class="form-label">Obs</label><textarea id="mlObs" rows="2" placeholder="Observações..."></textarea></div>
     <div class="form-group">
@@ -376,14 +477,13 @@ select option{background:var(--surface2);}
   </div>
 </div>
 
-<!-- MODAL EDITAR SEÇÃO -->
 <div class="modal-overlay" id="modalEditSecao">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('modalEditSecao')">✕</button>
     <div class="modal-title">✏️ Editar Seção</div>
     <div class="modal-sub" id="editSecSub"></div>
     <div class="form-group"><label class="form-label">Código</label><input type="text" id="editSecCod" maxlength="6" style="text-transform:uppercase"></div>
-    <div class="form-group"><label class="form-label">Descrição</label><input type="text" id="editSecDesc" placeholder="Descrição da seção"></div>
+    <div class="form-group"><label class="form-label">Descrição</label><input type="text" id="editSecDesc"></div>
     <div class="divider">Categorias e Atividades</div>
     <div id="editCatList"></div>
     <button class="btn-secondary" onclick="addEditCatEntry()" style="margin-top:4px">+ Adicionar Categoria</button>
@@ -391,31 +491,21 @@ select option{background:var(--surface2);}
   </div>
 </div>
 
-<!-- MODAL EDITAR CATEGORIA -->
 <div class="modal-overlay" id="modalEditCat">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('modalEditCat')">✕</button>
     <div class="modal-title">✏️ Editar Categoria</div>
     <div class="modal-sub" id="editCatSub"></div>
-    <div class="form-group" style="margin-top:12px">
-      <label class="form-label">Nome da Categoria</label>
-      <input type="text" id="editCatNome">
-    </div>
+    <div class="form-group" style="margin-top:12px"><label class="form-label">Nome</label><input type="text" id="editCatNome"></div>
     <div class="form-group">
       <label class="form-label">Ícone</label>
       <div class="chip-select" id="editIconChips">
-        <div class="chip" onclick="selIconEdit(this,'🛣️')">🛣️</div>
-        <div class="chip" onclick="selIconEdit(this,'💧')">💧</div>
-        <div class="chip" onclick="selIconEdit(this,'🏗️')">🏗️</div>
-        <div class="chip" onclick="selIconEdit(this,'🅿️')">🅿️</div>
-        <div class="chip" onclick="selIconEdit(this,'🚧')">🚧</div>
-        <div class="chip" onclick="selIconEdit(this,'⚡')">⚡</div>
-        <div class="chip" onclick="selIconEdit(this,'🌿')">🌿</div>
-        <div class="chip" onclick="selIconEdit(this,'🔩')">🔩</div>
-        <div class="chip" onclick="selIconEdit(this,'🧱')">🧱</div>
-        <div class="chip" onclick="selIconEdit(this,'🚰')">🚰</div>
-        <div class="chip" onclick="selIconEdit(this,'💡')">💡</div>
-        <div class="chip" onclick="selIconEdit(this,'📐')">📐</div>
+        <div class="chip" onclick="selIconEdit(this,'🛣️')">🛣️</div><div class="chip" onclick="selIconEdit(this,'💧')">💧</div>
+        <div class="chip" onclick="selIconEdit(this,'🏗️')">🏗️</div><div class="chip" onclick="selIconEdit(this,'🅿️')">🅿️</div>
+        <div class="chip" onclick="selIconEdit(this,'🚧')">🚧</div><div class="chip" onclick="selIconEdit(this,'⚡')">⚡</div>
+        <div class="chip" onclick="selIconEdit(this,'🌿')">🌿</div><div class="chip" onclick="selIconEdit(this,'🔩')">🔩</div>
+        <div class="chip" onclick="selIconEdit(this,'🧱')">🧱</div><div class="chip" onclick="selIconEdit(this,'🚰')">🚰</div>
+        <div class="chip" onclick="selIconEdit(this,'💡')">💡</div><div class="chip" onclick="selIconEdit(this,'📐')">📐</div>
         <div class="chip" onclick="selIconEdit(this,'⚙️')">⚙️</div>
       </div>
     </div>
@@ -423,23 +513,22 @@ select option{background:var(--surface2);}
   </div>
 </div>
 
-<!-- MODAL EDITAR ATIVIDADE -->
 <div class="modal-overlay" id="modalEditAtv">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('modalEditAtv')">✕</button>
     <div class="modal-title">✏️ Editar Atividade</div>
-    <div class="modal-sub" id="editAtvSub">Padrão ou personalizada</div>
-    <div class="form-group" style="margin-top:12px"><label class="form-label">Nome da Atividade</label><input type="text" id="editAtvNome"></div>
-    <div class="form-group"><label class="form-label">Unidade de Medida</label><input type="text" id="editAtvUnid"></div>
+    <div class="modal-sub" id="editAtvSub"></div>
+    <div class="form-group" style="margin-top:12px"><label class="form-label">Nome</label><input type="text" id="editAtvNome"></div>
+    <div class="form-group"><label class="form-label">Unidade</label><input type="text" id="editAtvUnid"></div>
     <button class="btn-primary" onclick="salvarEdicaoAtv()">✓ Salvar</button>
   </div>
 </div>
 
-<!-- MODAL VER FOTO GRANDE -->
 <div class="foto-modal" id="fotoModal" onclick="this.classList.remove('open')">
   <button class="foto-modal-close" onclick="document.getElementById('fotoModal').classList.remove('open')">✕</button>
   <img id="fotoModalImg" src="" alt="Foto">
 </div>
+
 
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
@@ -462,18 +551,17 @@ const ATV_PAD=[
   {id:'placas',nome:'Instalação de Placas',unid:'un'},
 ];
 const CAT_PAD=[
-  {tipo:'pavim',label:'Pavimentação',cls:'cat-pavim',icon:'🛣️'},
-  {tipo:'dren',label:'Drenagem',cls:'cat-dren',icon:'💧'},
-  {tipo:'terra',label:'Terraplanagem',cls:'cat-terra',icon:'🏗️'},
-  {tipo:'estac',label:'Estacionamento',cls:'cat-estac',icon:'🅿️'},
-  {tipo:'custom',label:'Outro',cls:'cat-custom',icon:'⚙️'},
+  {tipo:'pavim',label:'Pavimentação',cls:'cat-b-blue',icon:'🛣️'},
+  {tipo:'dren',label:'Drenagem',cls:'cat-b-green',icon:'💧'},
+  {tipo:'terra',label:'Terraplanagem',cls:'cat-b-orange',icon:'🏗️'},
+  {tipo:'estac',label:'Estacionamento',cls:'cat-b-purple',icon:'🅿️'},
+  {tipo:'custom',label:'Outro',cls:'cat-b-cyan',icon:'⚙️'},
 ];
 
 let cfg={nome:'Minha Obra',resp:'',contrato:''};
 let atvOverrides={};  // {id: {nome, unid}} para sobrescrever padrões
 let atvExt=[];        // atividades totalmente novas
-let catExt=[];        // categorias personalizadas do Firebase
-let iconSel='';let iconSelEdit='';
+let catExt=[];        // categorias personalizadas
 let secoes=[],regs=[],mCtx=null,unidSel='',currentUser='',editSecCtx=null,editAtvCtx=null;
 let fotoDataLancar=null,fotoDataModal=null,fotoTsLancar=null,fotoTsModal=null;
 const sortAlpha=(arr,key='nome')=>arr.slice().sort((a,b)=>(a[key]||'').localeCompare(b[key]||'','pt-BR',{sensitivity:'base'}));
@@ -481,7 +569,7 @@ const sortAlpha=(arr,key='nome')=>arr.slice().sort((a,b)=>(a[key]||'').localeCom
 // ── ATIVIDADES: mescla padrão + overrides + extras ──
 function todasAtv(){
   const base=ATV_PAD.map(a=>({...a,...(atvOverrides[a.id]||{})}));
-  return sortAlpha([...base,...atvExt]);
+  return [...base,...atvExt];
 }
 function getAtv(id){
   if(!id)return{nome:'?',unid:''};
@@ -489,18 +577,18 @@ function getAtv(id){
   // 1. Busca exata por id ou _docId
   let a=todas.find(a=>a.id===id||a._docId===id);
   if(a)return{...a};
-  // 2. Busca pelo sufixo do ID antigo (formato: timestamp_random_nomekey)
-  // Ex: "1776184478687_djp9f_rachao" -> sufixo "rachao" -> bate com id que contém "rachao"
-  const sufixo=id.split('_').slice(-1)[0];
+  // 2. Busca pelo sufixo do ID antigo (ex: "1776184478687_djp9f_rachao" -> "rachao")
+  const partes=id.split('_');
+  const sufixo=partes[partes.length-1];
   if(sufixo&&sufixo.length>2){
-    a=todas.find(a=>(a.id||'').includes(sufixo)||(a._docId||'').includes(sufixo));
+    a=todas.find(a=>(a.id||'').endsWith('_'+sufixo)||(a._docId||'').endsWith('_'+sufixo));
     if(a)return{...a};
-    // 3. Busca pelo sufixo no nome da atividade (match parcial)
-    const sufNorm=sufixo.toLowerCase();
-    a=todas.find(a=>(a.nome||'').toLowerCase().includes(sufNorm));
+    // 3. Match parcial pelo sufixo no nome
+    const suf=sufixo.toLowerCase();
+    a=todas.find(a=>(a.nome||'').toLowerCase().replace(/\s/g,'').includes(suf));
     if(a)return{...a};
   }
-  // 4. Fallback: retorna id bruto
+  // 4. Fallback
   return{nome:id,unid:''};
 }
 const getSec=id=>secoes.find(s=>s.id===id);
@@ -510,11 +598,19 @@ const pct=(v,t)=>!t?0:Math.min(100,Math.round(v/t*100));
 const hoje=()=>new Date().toISOString().split('T')[0];
 const fmtD=d=>{if(!d)return'';const[y,m,dd]=d.split('-');return`${dd}/${m}/${y}`;};
 const nF=n=>Number(n).toLocaleString('pt-BR',{maximumFractionDigits:2});
+
 function todasCat(){
-  const extras=catExt.filter(c=>!CAT_PAD.some(p=>p.tipo===c.tipo));
+  const extras=(typeof catExt!=='undefined'?catExt:[]).filter(c=>!CAT_PAD.some(p=>p.tipo===c.tipo));
   return sortAlpha([...CAT_PAD,...extras],'label');
 }
-const catInfo=tipo=>todasCat().find(c=>c.tipo===tipo)||{label:tipo,cls:'cat-custom',icon:'⚙️'};
+const CAT_COLORS=['cat-b-blue','cat-b-green','cat-b-orange','cat-b-purple','cat-b-cyan'];
+const catInfo=tipo=>{
+  const c=todasCat().find(c=>c.tipo===tipo);
+  if(c)return c;
+  // Gerar cor baseada no tipo
+  const idx=Math.abs(tipo.split('').reduce((a,b)=>a+b.charCodeAt(0),0))%CAT_COLORS.length;
+  return{label:tipo,cls:CAT_COLORS[idx],icon:'⚙️'};
+};
 const secPct=s=>{let t=0,e=0;(s.categorias||[]).forEach(cat=>(cat.atividades||[]).forEach(a=>{t+=a.qtdTotal||0;e+=execTot(s.id,cat.id,a.id);}));return pct(e,t);};
 const catPct=(sec,cat)=>{let t=0,e=0;(cat.atividades||[]).forEach(a=>{t+=a.qtdTotal||0;e+=execTot(sec.id,cat.id,a.id);});return pct(e,t);};
 
@@ -536,7 +632,6 @@ function startListeners(){
   });
   // Atividades extras
   onSnapshot(collection(db,'atividades'),snap=>{atvExt=sortAlpha(snap.docs.map(d=>{const data=d.data();return{...data,_docId:d.id,id:d.id};}));renderCurrent();});
-  // Categorias personalizadas
   onSnapshot(collection(db,'categorias'),snap=>{catExt=sortAlpha(snap.docs.map(d=>({...d.data(),_docId:d.id})),'label');renderCurrent();});
   onSnapshot(collection(db,'secoes'),snap=>{secoes=sortAlpha(snap.docs.map(d=>({...d.data(),id:d.id})),'cod');renderCurrent();});
   onSnapshot(query(collection(db,'registros'),orderBy('ts','desc')),snap=>{regs=snap.docs.map(d=>({...d.data(),_docId:d.id}));renderCurrent();setSS('online');});
@@ -577,7 +672,7 @@ window.previewFoto=function(ctx,inputEl){
       const tsEl=document.getElementById('fotoTs'+ctx+'Display');
       preview.src=compressed;
       if(area)area.style.display='block';
-      if(tsEl){tsEl.textContent='📅 '+ts.toLocaleDateString('pt-BR')+' '+ts.toLocaleTimeString('pt-BR');}
+      if(tsEl)tsEl.textContent='📅 '+ts.toLocaleDateString('pt-BR')+' '+ts.toLocaleTimeString('pt-BR');
       if(bar)bar.style.width='100%';
       setTimeout(()=>{if(prog)prog.classList.remove('show');},600);
     };
@@ -619,6 +714,11 @@ if(saved){currentUser=saved;document.getElementById('modalUser').classList.remov
 else{document.getElementById('loadingScreen').classList.add('hidden');document.getElementById('modalUser').classList.add('open');}
 
 // ── NAV ──
+window.toggleAcc=function(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.classList.toggle('open');
+};
 window.nav=function(n){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -655,12 +755,12 @@ function renderSecoes(){
   if(!secoes.length){el.innerHTML='<div class="empty"><div class="empty-icon">📍</div><div class="empty-text">Nenhuma seção cadastrada.<br>Vá em ⚙️ Config.</div></div>';return;}
   el.innerHTML=secoes.map(s=>{
     const p=secPct(s);
-    const catBlocos=sortAlpha(s.categorias||[],"tipo").map(cat=>{
-      const ci=catInfo(cat.tipo);const cp=catPct(s,cat);
+    const catBlocos=(s.categorias||[]).map(cat=>{
+      const ci=catInfo(cat.tipo)||{label:cat.obs||cat.tipo||'?',cls:'cat-b-cyan',icon:'⚙️'};const cp=catPct(s,cat);
       const ccls=cp>=100?'c-green':cp>=50?'c-yellow':'c-blue';
       const cor=cp>=100?'var(--green)':cp>=50?'var(--accent)':'var(--blue)';
       const label=cat.tipo==='custom'&&cat.obs?cat.obs:cat.obs?ci.label+' / '+cat.obs:ci.label;
-      const atvRows=sortAlpha(cat.atividades||[]).map(a=>{
+      const atvRows=(cat.atividades||[]).map(a=>{
         const info=getAtv(a.id);const ex=execTot(s.id,cat.id,a.id);const ps=pct(ex,a.qtdTotal);
         const sc=ps>=100?'var(--green)':ps>=50?'var(--accent)':'var(--blue)';
         return`<div class="atv-row"><div class="atv-info"><div class="atv-nome">${info.nome}</div><div class="atv-meta">${nF(ex)} / ${nF(a.qtdTotal)} ${info.unid}</div><div class="pb-wrap pb-h8"><div class="pb-fill" style="background:${sc};width:${ps}%"></div></div></div><div class="atv-pct" style="color:${sc}">${ps}%</div><button class="btn-lancar" onclick="abrirModal('${s.id}','${cat.id}','${a.id}')">+Lançar</button></div>`;
@@ -674,31 +774,19 @@ window.togSec=id=>document.getElementById(id)?.classList.toggle('open');
 
 // ── LANÇAR ──
 function renderLancar(){
-  const curSec=document.getElementById('rSecao').value;
-  document.getElementById('rSecao').innerHTML=secoes.map(s=>`<option value="${s.id}"${s.id===curSec?' selected':''}>Seção ${s.cod}${s.desc?' — '+s.desc:''}</option>`).join('');
-  const curCat=document.getElementById('rCat').value;
-  const curAtv=document.getElementById('rAtv').value;
-  rLoadCat();
-  // Tentar restaurar seleções anteriores
-  if(curCat&&document.getElementById('rCat').querySelector(`option[value="${curCat}"]`)){
-    document.getElementById('rCat').value=curCat;
-    rLoadAtv();
-    if(curAtv&&document.getElementById('rAtv').querySelector(`option[value="${curAtv}"]`)){
-      document.getElementById('rAtv').value=curAtv;rLoadUnid();
-    }
-  }
-  if(!document.getElementById('rData').value)document.getElementById('rData').value=hoje();
+  document.getElementById('rSecao').innerHTML=secoes.map(s=>`<option value="${s.id}">Seção ${s.cod}${s.desc?' — '+s.desc:''}</option>`).join('');
+  rLoadCat();document.getElementById('rData').value=hoje();
 }
 window.rLoadCat=function(){
   const sec=getSec(document.getElementById('rSecao').value);const sel=document.getElementById('rCat');
   if(!sec||(sec.categorias||[]).length===0){sel.innerHTML='<option>— sem categorias —</option>';return;}
-  sel.innerHTML=sortAlpha(sec.categorias||[],'tipo').map(cat=>{const ci=catInfo(cat.tipo);const label=cat.tipo==='custom'&&cat.obs?cat.obs:cat.obs?ci.label+' ('+cat.obs+')':ci.label;return`<option value="${cat.id}">${ci.icon} ${label}</option>`;}).join('');
+  sel.innerHTML=(sec.categorias||[]).map(cat=>{const ci=catInfo(cat.tipo);const label=cat.tipo==='custom'&&cat.obs?cat.obs:cat.obs?ci.label+' ('+cat.obs+')':ci.label;return`<option value="${cat.id}">${ci.icon} ${label}</option>`;}).join('');
   rLoadAtv();
 };
 window.rLoadAtv=function(){
   const sec=getSec(document.getElementById('rSecao').value);const cat=getCat(sec,document.getElementById('rCat').value);const sel=document.getElementById('rAtv');
   if(!cat||(cat.atividades||[]).length===0){sel.innerHTML='<option>— sem atividades —</option>';return;}
-  sel.innerHTML=sortAlpha(cat.atividades||[]).map(a=>{const i=getAtv(a.id);return`<option value="${a.id}">${i.nome} (${i.unid})</option>`;}).join('');
+  sel.innerHTML=(cat.atividades||[]).map(a=>{const i=getAtv(a.id);return`<option value="${a.id}">${i.nome} (${i.unid})</option>`;}).join('');
   rLoadUnid();
 };
 window.rLoadUnid=function(){document.getElementById('rUnid').value=getAtv(document.getElementById('rAtv').value).unid;};
@@ -752,7 +840,7 @@ window.confirmarModal=async function(){
   }
 };
 window.closeModal=id=>document.getElementById(id)?.classList.remove('open');
-['modalLancar','modalEditSecao','modalEditAtv','modalEditCat'].forEach(id=>{document.getElementById(id).addEventListener('click',e=>{if(e.target===document.getElementById(id))closeModal(id);});});
+['modalLancar','modalEditSecao','modalEditAtv'].forEach(id=>{document.getElementById(id).addEventListener('click',e=>{if(e.target===document.getElementById(id))closeModal(id);});});
 
 // ── HISTÓRICO ──
 function renderHist(){
@@ -771,44 +859,67 @@ function renderHist(){
 
 // ── RELATÓRIO ──
 function renderRel(){
-  const curSec=document.getElementById('relSec').value;
-  const curCat=document.getElementById('relCat').value;
-  document.getElementById('relSec').innerHTML='<option value="">Todas</option>'+secoes.map(s=>`<option value="${s.id}"${s.id===curSec?' selected':''}>Seção ${s.cod}${s.desc?' — '+s.desc:''}</option>`).join('');
-  // Montar lista de categorias únicas que aparecem nas seções cadastradas
-  const catsUsadas=[];
+  document.getElementById('relSec').innerHTML='<option value="">Todas</option>'+
+    secoes.map(s=>`<option value="${s.id}">Seção ${s.cod}${s.desc?' — '+s.desc:''}</option>`).join('');
+  // Listar todas as categorias únicas das seções (por catId real)
+  const catsMap={};
   secoes.forEach(s=>(s.categorias||[]).forEach(cat=>{
-    const ci=catInfo(cat.tipo);
-    const label=cat.obs?ci.label+' / '+cat.obs:ci.label;
-    const key=cat.tipo+'|'+cat.id;
-    if(!catsUsadas.find(c=>c.key===key))catsUsadas.push({key,catId:cat.id,tipo:cat.tipo,label,icon:ci.icon});
+    if(!catsMap[cat.id]){
+      const ci=catInfo(cat.tipo);
+      const lbl=cat.obs?ci.label+' / '+cat.obs:ci.label;
+      catsMap[cat.id]={id:cat.id,label:lbl,icon:ci.icon};
+    }
   }));
-  catsUsadas.sort((a,b)=>a.label.localeCompare(b.label,'pt-BR',{sensitivity:'base'}));
-  document.getElementById('relCat').innerHTML='<option value="">Todas</option>'+catsUsadas.map(c=>`<option value="${c.catId}"${c.catId===curCat?' selected':''}>${c.icon} ${c.label}</option>`).join('');
-  gerarPrevia();
+  const catsArr=Object.values(catsMap).sort((a,b)=>a.label.localeCompare(b.label,'pt-BR'));
+  document.getElementById('relCat').innerHTML='<option value="">Todas</option>'+
+    catsArr.map(c=>`<option value="${c.id}">${c.icon} ${c.label}</option>`).join('');
+  try{gerarPrevia();}catch(e){console.error('gerarPrevia erro:',e);}
 }
 function filtrarRegs(){
-  const sId=document.getElementById('relSec').value,cId=document.getElementById('relCat').value,dI=document.getElementById('relDI').value,dF=document.getElementById('relDF').value;
-  return regs.filter(r=>{
-    if(sId&&r.secaoId!==sId)return false;
-    if(cId&&r.catId!==cId)return false;
-    if(dI&&r.data<dI)return false;if(dF&&r.data>dF)return false;return true;
-  });
+  try{
+    const sId=(document.getElementById('relSec')?.value)||'';
+    const cId=(document.getElementById('relCat')?.value)||'';
+    const dI=(document.getElementById('relDI')?.value)||'';
+    const dF=(document.getElementById('relDF')?.value)||'';
+    return regs.filter(r=>{
+      if(sId&&r.secaoId!==sId)return false;
+      if(cId&&r.catId!==cId)return false;
+      if(dI&&r.data<dI)return false;
+      if(dF&&r.data>dF)return false;
+      return true;
+    });
+  }catch(e){console.error('filtrarRegs erro:',e);return regs;}
 }
 function montarRows(){
-  const rFilt=filtrarRegs();const sId=document.getElementById('relSec')?.value;const rows=[];
+  try{
+  const rFilt=filtrarRegs();
+  const sId=(document.getElementById('relSec')?.value)||'';
+  const cId=(document.getElementById('relCat')?.value)||'';
+  const rows=[];
   (sId?secoes.filter(s=>s.id===sId):secoes).forEach(s=>{
-    const cId=document.getElementById('relCat')?.value;
     (cId?(s.categorias||[]).filter(c=>c.id===cId):s.categorias||[]).forEach(cat=>{
       const ci=catInfo(cat.tipo);
       (cat.atividades||[]).forEach(a=>{const info=getAtv(a.id);const ex=rFilt.filter(r=>r.secaoId===s.id&&r.catId===cat.id&&r.atvId===a.id).reduce((acc,r)=>acc+r.qtd,0);rows.push({secao:'Seção '+s.cod,descSec:s.desc||'',categoria:ci.label,catObs:cat.obs||'',atividade:info.nome,unid:info.unid,prev:a.qtdTotal||0,exec:ex,saldo:(a.qtdTotal||0)-ex,pct:pct(ex,a.qtdTotal||0)});});
     });
   });
   return rows;
+  }catch(e){console.error('montarRows erro:',e);return[];}
 }
 function gerarPrevia(){
   const rows=montarRows();const el=document.getElementById('relPrevia');
-  if(!rows.length){el.innerHTML='<div style="color:var(--muted);font-size:0.78rem">Sem dados.</div>';return;}
-  el.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.68rem"><thead><tr style="background:var(--surface2)">${['Seção','Categoria','Atividade','Prev.','Exec.','%'].map(h=>`<th style="padding:5px 6px;text-align:left;border-bottom:1px solid var(--border);color:var(--muted)">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>{const cor=r.pct>=100?'var(--green)':r.pct>=50?'var(--accent)':'var(--blue)';return`<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 6px;font-weight:700">${r.secao}</td><td style="padding:5px 6px">${r.categoria}${r.catObs?' ('+r.catObs+')':''}</td><td style="padding:5px 6px">${r.atividade}</td><td style="padding:5px 4px;font-family:'DM Mono',monospace">${nF(r.prev)} ${r.unid}</td><td style="padding:5px 4px;font-family:'DM Mono',monospace;color:var(--green)">${nF(r.exec)} ${r.unid}</td><td style="padding:5px 4px;font-family:'DM Mono',monospace;color:${cor}">${r.pct}%</td></tr>`;}).join('')}</tbody></table></div>`;
+  if(!rows.length){el.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Sem dados para os filtros selecionados.</div></div>';return;}
+  const corPct=p=>p>=100?'var(--green)':p>=50?'#d97706':'var(--blue)';
+  el.innerHTML=`<table class="rel-table">
+    <thead><tr><th>Seção</th><th>Categoria</th><th>Atividade</th><th>Prev.</th><th>Exec.</th><th>%</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td style="font-weight:700">${r.secao}</td>
+      <td>${r.categoria}${r.catObs?' ('+r.catObs+')':''}</td>
+      <td>${r.atividade}</td>
+      <td style="font-family:'DM Mono',monospace">${nF(r.prev)} ${r.unid}</td>
+      <td style="font-family:'DM Mono',monospace;color:var(--green);font-weight:600">${nF(r.exec)} ${r.unid}</td>
+      <td style="font-family:'DM Mono',monospace;color:${corPct(r.pct)};font-weight:700">${r.pct}%</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
 }
 
 window.exportExcel=function(){
@@ -898,11 +1009,10 @@ window.resetAtvPadrao=async function(id){
 // ── CONFIG: SEÇÕES ──
 window.addCatEntry=function(){
   const id='ce_'+Date.now();const div=document.createElement('div');div.className='cat-entry';div.id=id;
-  const catChips=todasCat().map(c=>`<div class="chip" data-tipo="${c.tipo}" onclick="selCat(this,'${id}')">${c.icon} ${c.label}</div>`).join('');
   div.innerHTML=`<div class="cat-entry-header"><span style="font-size:0.78rem;font-weight:700;color:var(--accent)">Categoria</span><button class="btn-danger" style="margin-left:auto" onclick="document.getElementById('${id}').remove()">✕</button></div>
-    <div class="form-group"><label class="form-label">Tipo</label><div class="chip-select">${catChips}</div></div>
+    <div class="form-group"><label class="form-label">Tipo</label><div class="chip-select"><div class="chip" data-tipo="pavim" onclick="selCat(this,'${id}')">🛣️ Pavimentação</div><div class="chip" data-tipo="dren" onclick="selCat(this,'${id}')">💧 Drenagem</div><div class="chip" data-tipo="terra" onclick="selCat(this,'${id}')">🏗️ Terraplanagem</div><div class="chip" data-tipo="estac" onclick="selCat(this,'${id}')">🅿️ Estacionamento</div><div class="chip" data-tipo="custom" onclick="selCat(this,'${id}')">⚙️ Outro</div></div></div>
     <div class="form-group" id="obsBox_${id}" style="display:none"><label class="form-label">Observação / Nome específico</label><input type="text" id="obs_${id}" placeholder="Ex: Passeio, Ciclovia, Contenção..."></div>
-    <div class="form-group"><label class="form-label">Atividades desta Categoria</label><div class="chip-select" id="atvChips_${id}">${todasAtv().map(a=>`<div class="chip" data-atvid="${a._docId||a.id}" onclick="togAtvChip(this,'${id}')">${a.nome}</div>`).join('')}</div></div>
+    <div class="form-group"><label class="form-label">Atividades desta Categoria</label><div class="chip-select" id="atvChips_${id}">${todasAtv().map(a=>`<div class="chip" data-atvid="${a.id}" onclick="togAtvChip(this,'${id}')">${a.nome}</div>`).join('')}</div></div>
     <div id="qtdBox_${id}"></div>`;
   document.getElementById('catEntries').appendChild(div);
 };
@@ -934,79 +1044,63 @@ window.salvarSecao=async function(){
 };
 
 // ── EDITAR SEÇÃO ──
-// Renderiza o bloco de uma categoria dentro do modal de edição
-function renderEditCatBlock(cat,isNew){
-  const ci=catInfo(cat.tipo);
+// ── EDIÇÃO DE SEÇÃO: funções auxiliares ──
+function renderEditCatBlock(cat){
+  const ci=catInfo(cat.tipo)||{label:cat.obs||cat.tipo,cls:'cat-b-cyan',icon:'⚙️'};
   const label=cat.tipo==='custom'&&cat.obs?cat.obs:cat.obs?ci.label+' / '+cat.obs:ci.label;
   const blockId='ecb_'+cat.id;
-  // Atividades já salvas na categoria
   const atvRows=sortAlpha(cat.atividades||[]).map(a=>{
     const info=getAtv(a.id);
-    const canonId=info.id||a.id;
-    return`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+    return`<div id="editrow_${cat.id}_${a.id}" style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
       <div style="flex:1;font-size:0.76rem">${info.nome} <span class="tag">${info.unid}</span></div>
-      <input type="number" id="eq_${cat.id}_${canonId}" data-atvid="${canonId}" value="${a.qtdTotal||0}" min="0" step="0.01" style="max-width:90px;padding:6px 8px;font-size:0.82rem">
-      <button onclick="remAtvEdit('${blockId}','${canonId}')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.9rem;padding:0 4px">✕</button>
+      <input type="number" id="eq_${cat.id}_${a.id}" value="${a.qtdTotal||0}" min="0" step="0.01" style="max-width:90px;padding:6px 8px;font-size:0.82rem">
+      <button onclick="remAtvEdit('${cat.id}','${a.id}')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:1rem;padding:0 4px">✕</button>
     </div>`;
   }).join('');
-  // Observação editável
-  const obsVal=cat.obs||'';
-  return`<div id="${blockId}" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px">
+  return`<div id="${blockId}" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <span class="cat-badge ${ci.cls}">${ci.icon} ${label}</span>
-      <button onclick="document.getElementById('${blockId}').remove()" style="margin-left:auto;background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.9rem">✕</button>
+      <button onclick="document.getElementById('${blockId}').remove()" style="margin-left:auto;background:none;border:none;color:var(--danger);cursor:pointer;font-size:1rem">✕</button>
     </div>
     <div class="form-group" style="margin-bottom:8px">
       <label class="form-label">Observação (opcional)</label>
-      <input type="text" id="eobs_${cat.id}" value="${obsVal}" placeholder="Ex: Passeio, Ciclovia...">
+      <input type="text" id="eobs_${cat.id}" value="${cat.obs||''}" placeholder="Ex: Passeio, Ciclovia...">
     </div>
     <div class="divider">Atividades e Quantidades Previstas</div>
     <div id="eatvrows_${cat.id}">${atvRows}</div>
     <div style="margin-top:8px">
       <select id="enovaatv_${cat.id}" style="margin-bottom:6px">
         <option value="">— Selecionar atividade para adicionar —</option>
-        ${todasAtv().filter(a=>!(cat.atividades||[]).some(ca=>ca.id===(a._docId||a.id))).map(a=>`<option value="${a._docId||a.id}">${a.nome} (${a.unid})</option>`).join('')}
+        ${todasAtv().filter(a=>!(cat.atividades||[]).some(ca=>ca.id===a.id)).map(a=>`<option value="${a._docId||a.id}">${a.nome} (${a.unid})</option>`).join('')}
       </select>
-      <button class="btn-sm-accent" onclick="addAtvEdit('${blockId}','${cat.id}')" style="width:100%">+ Adicionar Atividade</button>
+      <button class="btn-sm-accent" onclick="addAtvEdit('${cat.id}')" style="width:100%">+ Adicionar Atividade</button>
     </div>
   </div>`;
 }
 
-window.addAtvEdit=function(blockId,catId){
+window.addAtvEdit=function(catId){
   const sel=document.getElementById('enovaatv_'+catId);
-  const atvId=sel.value;
-  if(!atvId)return;
+  const atvId=sel.value;if(!atvId)return;
   const info=getAtv(atvId);
-  const rows=document.getElementById('eatvrows_'+catId);
-  // Checar se já existe
   if(document.getElementById('eq_'+catId+'_'+atvId)){toast('Atividade já adicionada.');return;}
+  const rows=document.getElementById('eatvrows_'+catId);
   const div=document.createElement('div');
   div.id='editrow_'+catId+'_'+atvId;
   div.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)';
   div.innerHTML=`<div style="flex:1;font-size:0.76rem">${info.nome} <span class="tag">${info.unid}</span></div>
-    <input type="number" id="eq_${catId}_${atvId}" data-atvid="${atvId}" value="0" min="0" step="0.01" style="max-width:90px;padding:6px 8px;font-size:0.82rem">
-    <button onclick="remAtvEdit('${blockId}','${atvId}')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.9rem;padding:0 4px">✕</button>`;
+    <input type="number" id="eq_${catId}_${atvId}" value="0" min="0" step="0.01" style="max-width:90px;padding:6px 8px;font-size:0.82rem">
+    <button onclick="remAtvEdit('${catId}','${atvId}')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:1rem;padding:0 4px">✕</button>`;
   rows.appendChild(div);
-  // Remover do select
   sel.querySelector(`option[value="${atvId}"]`)?.remove();
 };
 
-window.remAtvEdit=function(blockId,atvId){
-  // Remover a linha
-  const row=document.getElementById('editrow_'+blockId.replace('ecb_','')+'_'+atvId)||
-             document.querySelector(`[id="eatvrows_${blockId.replace('ecb_','')}"] div`);
-  // Usar catId do blockId
-  const catId=blockId.replace('ecb_','');
-  const rowEl=document.getElementById('editrow_'+catId+'_'+atvId);
-  const inp=document.getElementById('eq_'+catId+'_'+atvId);
-  if(rowEl)rowEl.remove();
-  else if(inp)inp.closest('div[style*="display:flex"]')?.remove();
-  // Readicionar ao select
+window.remAtvEdit=function(catId,atvId){
+  const row=document.getElementById('editrow_'+catId+'_'+atvId);
+  if(row)row.remove();
   const sel=document.getElementById('enovaatv_'+catId);
   if(sel){const info=getAtv(atvId);const opt=document.createElement('option');opt.value=atvId;opt.textContent=info.nome+' ('+info.unid+')';sel.appendChild(opt);}
 };
 
-// Adicionar nova entrada de categoria no modal de edição
 window.addEditCatEntry=function(){
   const el=document.getElementById('editCatList');
   const id='new_'+Date.now();
@@ -1014,10 +1108,10 @@ window.addEditCatEntry=function(){
   const atvChips=todasAtv().map(a=>`<div class="chip" data-atvid="${a._docId||a.id}" onclick="togEditAtvChip(this,'${id}')">${a.nome}</div>`).join('');
   const div=document.createElement('div');
   div.id='ecb_'+id;
-  div.style.cssText='background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px';
+  div.style.cssText='background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px';
   div.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-    <span style="font-size:0.78rem;font-weight:700;color:var(--accent)">Nova Categoria</span>
-    <button onclick="document.getElementById('ecb_${id}').remove()" style="margin-left:auto;background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.9rem">✕</button>
+    <span style="font-size:0.78rem;font-weight:700;color:var(--accent2)">Nova Categoria</span>
+    <button onclick="document.getElementById('ecb_${id}').remove()" style="margin-left:auto;background:none;border:none;color:var(--danger);cursor:pointer;font-size:1rem">✕</button>
   </div>
   <div class="form-group"><label class="form-label">Tipo</label><div class="chip-select" id="eccat_${id}">${catChips}</div></div>
   <div class="form-group" style="display:none" id="ecobs_wrap_${id}"><label class="form-label">Observação (opcional)</label><input type="text" id="ecobs_${id}" placeholder="Ex: Passeio, Ciclovia..."></div>
@@ -1031,12 +1125,16 @@ window.selEditCatChip=function(el,id){
   el.classList.add('selected');
   document.getElementById('ecobs_wrap_'+id).style.display='block';
 };
+
 window.togEditAtvChip=function(el,id){
   el.classList.toggle('selected');
   const sel=[...document.querySelectorAll('#ecatv_'+id+' .chip.selected')];
   const box=document.getElementById('ecqtd_'+id);
   const existing={};box.querySelectorAll('input[type=number]').forEach(inp=>{existing[inp.id]=inp.value;});
-  box.innerHTML=sel.length?'<div class="divider">Quantidades</div>'+sel.map(chip=>{const a=getAtv(chip.dataset.atvid);const key=`ecq_${id}_${a.id}`;return`<div class="form-group"><label class="form-label">${a.nome} (${a.unid})</label><input type="number" id="${key}" value="${existing[key]||''}" placeholder="0" min="0" step="0.01"></div>`;}).join(''):'';
+  box.innerHTML=sel.length?'<div class="divider">Quantidades</div>'+sel.map(chip=>{
+    const a=getAtv(chip.dataset.atvid);const key=`ecq_${id}_${chip.dataset.atvid}`;
+    return`<div class="form-group"><label class="form-label">${a.nome} (${a.unid})</label><input type="number" id="${key}" value="${existing[key]||''}" placeholder="0" min="0" step="0.01"></div>`;
+  }).join(''):'';
 };
 
 window.abrirEditSecao=function(secId){
@@ -1046,10 +1144,9 @@ window.abrirEditSecao=function(secId){
   document.getElementById('editSecCod').value=sec.cod;
   document.getElementById('editSecDesc').value=sec.desc||'';
   const el=document.getElementById('editCatList');
-  el.innerHTML=(sec.categorias||[]).map(cat=>renderEditCatBlock(cat,false)).join('');
+  el.innerHTML=sortAlpha(sec.categorias||[],'tipo').map(cat=>renderEditCatBlock(cat)).join('');
   document.getElementById('modalEditSecao').classList.add('open');
 };
-
 window.salvarEdicaoSecao=async function(){
   if(!editSecCtx)return;
   const novoCod=document.getElementById('editSecCod').value.trim().toUpperCase();
@@ -1059,26 +1156,40 @@ window.salvarEdicaoSecao=async function(){
 
   const novasCats=[];
 
-  // Categorias existentes (editadas)
+  // 1. Categorias existentes (blocos com id ecb_<catId>)
   (editSecCtx.categorias||[]).forEach(cat=>{
-    const blockId='ecb_'+cat.id;
-    if(!document.getElementById(blockId))return; // foi removida pelo usuário
+    const block=document.getElementById('ecb_'+cat.id);
+    if(!block)return; // foi removida pelo usuário
     const obs=document.getElementById('eobs_'+cat.id)?.value.trim()||cat.obs||'';
-    // Pegar todas as atividades visíveis no bloco
+    // Coletar todas atividades: busca todos inputs number dentro do bloco de atividades
     const atividades=[];
-    const container=document.getElementById('eatvrows_'+cat.id);
-    if(container){
-      container.querySelectorAll('input[type=number]').forEach(inp=>{
-        const atvId=inp.dataset.atvid||inp.id.replace('eq_'+cat.id+'_','');
-        const qtd=parseFloat(inp.value)||0;
-        if(atvId&&!atividades.some(a=>a.id===atvId))atividades.push({id:atvId,qtdTotal:qtd});
+    const atvContainer=document.getElementById('eatvrows_'+cat.id);
+    if(atvContainer){
+      atvContainer.querySelectorAll('input[type=number]').forEach(inp=>{
+        // id formato: eq_<catId>_<atvId>
+        const prefix='eq_'+cat.id+'_';
+        if(inp.id.startsWith(prefix)){
+          const atvId=inp.id.slice(prefix.length);
+          atividades.push({id:atvId,qtdTotal:parseFloat(inp.value)||0});
+        }
       });
     }
-    novasCats.push({...cat,obs,atividades});
+    // Também pegar atividades adicionadas via addAtvEdit (fora do eatvrows mas dentro do block)
+    block.querySelectorAll('input[type=number]').forEach(inp=>{
+      const prefix='eq_'+cat.id+'_';
+      if(inp.id.startsWith(prefix)){
+        const atvId=inp.id.slice(prefix.length);
+        if(!atividades.some(a=>a.id===atvId)){
+          atividades.push({id:atvId,qtdTotal:parseFloat(inp.value)||0});
+        }
+      }
+    });
+    if(atividades.length)novasCats.push({...cat,obs,atividades});
+    else novasCats.push({...cat,obs,atividades:cat.atividades||[]});
   });
 
-  // Categorias novas adicionadas no modal
-  document.querySelectorAll('[id^="ecb_new_"]').forEach(block=>{
+  // 2. Categorias novas adicionadas no modal (blocos com id ecb_new_...)
+  document.querySelectorAll('#editCatList [id^="ecb_new_"]').forEach(block=>{
     const id=block.id.replace('ecb_','');
     const tipoChip=block.querySelector('.chip.selected[data-tipo]');
     if(!tipoChip)return;
@@ -1086,8 +1197,15 @@ window.salvarEdicaoSecao=async function(){
     const obs=document.getElementById('ecobs_'+id)?.value.trim()||'';
     const atvSel=[...block.querySelectorAll('.chip.selected[data-atvid]')];
     if(!atvSel.length)return;
-    const atividades=atvSel.map(chip=>{const a=getAtv(chip.dataset.atvid);const qtd=parseFloat(document.getElementById('ecq_'+id+'_'+a.id)?.value)||0;return{id:a.id,qtdTotal:qtd};});
-    novasCats.push({id:'cat_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),tipo,obs,atividades});
+    const atividades=atvSel.map(chip=>{
+      const atvId=chip.dataset.atvid;
+      const qtd=parseFloat(document.getElementById('ecq_'+id+'_'+atvId)?.value)||0;
+      return{id:atvId,qtdTotal:qtd};
+    });
+    novasCats.push({
+      id:'cat_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+      tipo,obs,atividades
+    });
   });
 
   if(!novasCats.length){alert('A seção precisa ter ao menos uma categoria.');return;}
@@ -1117,31 +1235,36 @@ window.resetTudo=async function(){
   toast('Registros apagados. ✓');setSS('online');
 };
 function renderCfg(){
-  document.getElementById('cNome').value=cfg.nome||'';document.getElementById('cResp').value=cfg.resp||'';document.getElementById('cContrato').value=cfg.contrato||'';
+  document.getElementById('cNome').value=cfg.nome||'';
+  document.getElementById('cResp').value=cfg.resp||'';
+  document.getElementById('cContrato').value=cfg.contrato||'';
   unidSel='';iconSel='';iconSelEdit='';
   document.querySelectorAll('#unidChips .chip').forEach(c=>c.classList.remove('selected'));
   document.querySelectorAll('#iconChips .chip').forEach(c=>c.classList.remove('selected'));
-  document.getElementById('nsNome').value='';document.getElementById('nsUnid').value='';
+  if(document.getElementById('nsNome'))document.getElementById('nsNome').value='';
+  if(document.getElementById('nsUnid'))document.getElementById('nsUnid').value='';
   if(document.getElementById('ncNome'))document.getElementById('ncNome').value='';
-  renderListaAtv();renderListaCat();
-  document.getElementById('sCod').value='';document.getElementById('sDesc').value='';document.getElementById('catEntries').innerHTML='';
+  renderListaAtv();
+  renderListaCat();
+  if(document.getElementById('sCod'))document.getElementById('sCod').value='';
+  if(document.getElementById('sDesc'))document.getElementById('sDesc').value='';
+  if(document.getElementById('catEntries'))document.getElementById('catEntries').innerHTML='';
   renderCfgSecList();
 }
 
-// ── CATEGORIAS: listar, adicionar, editar, excluir ──
+// ── CATEGORIAS ──
 function renderListaCat(){
   const el=document.getElementById('listaCategorias');
   if(!el)return;
   const todas=todasCat();
-  if(!todas.length){el.innerHTML='<div style="color:var(--muted);font-size:0.78rem;padding:8px 0">Nenhuma categoria cadastrada ainda.</div>';return;}
+  if(!todas.length){el.innerHTML='<div style="color:var(--muted);font-size:0.78rem;padding:8px 0">Nenhuma categoria ainda.</div>';return;}
   el.innerHTML=todas.map(c=>{
     const isExt=catExt.find(x=>x.tipo===c.tipo);
     const isPad=CAT_PAD.some(p=>p.tipo===c.tipo);
-    return`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
-      <span style="font-size:1.1rem">${c.icon}</span>
-      <div style="flex:1">
-        <span style="font-size:0.8rem;font-weight:600">${c.label}</span>
-        ${isPad?'<span style="font-size:0.58rem;color:var(--muted);margin-left:6px">padrão</span>':'<span style="font-size:0.58rem;color:var(--accent);margin-left:6px">✦ personalizada</span>'}
+    return`<div class="atv-edit-row">
+      <span style="font-size:1rem">${c.icon}</span>
+      <div style="flex:1;margin-left:8px"><span style="font-size:0.8rem;font-weight:600">${c.label}</span>
+        ${isPad?'<span style="font-size:0.58rem;color:var(--muted);margin-left:6px">padrão</span>':'<span style="font-size:0.58rem;color:var(--accent2);margin-left:6px">✦ sua</span>'}
       </div>
       <div style="display:flex;gap:5px">
         <button class="btn-sm-accent" onclick="abrirEditCat('${c.tipo}')">✏️</button>
@@ -1150,76 +1273,9 @@ function renderListaCat(){
     </div>`;
   }).join('');
 }
-
 window.selIcon=function(el,icon){
   document.querySelectorAll('#iconChips .chip').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');iconSel=icon;
 };
 window.selIconEdit=function(el,icon){
-  document.querySelectorAll('#editIconChips .chip').forEach(c=>c.classList.remove('selected'));
-  el.classList.add('selected');iconSelEdit=icon;
-};
-
-window.addCategoria=async function(){
-  const nome=document.getElementById('ncNome').value.trim();
-  const icon=iconSel||'⚙️';
-  if(!nome){alert('Informe o nome da categoria.');return;}
-  const tipo='cat_'+Date.now();
-  setSS('syncing');
-  try{
-    await addDoc(collection(db,'categorias'),{tipo,label:nome,icon,cls:'cat-custom'});
-    document.getElementById('ncNome').value='';
-    iconSel='';
-    document.querySelectorAll('#iconChips .chip').forEach(c=>c.classList.remove('selected'));
-    toast('Categoria "'+nome+'" criada! ✓');setSS('online');
-  }catch(e){alert('Erro: '+e.message);setSS('offline');}
-};
-
-let editCatCtx=null;
-window.abrirEditCat=function(tipo){
-  const c=catInfo(tipo);
-  const isExt=catExt.find(x=>x.tipo===tipo);
-  editCatCtx={tipo,isExt};
-  document.getElementById('editCatSub').textContent=isExt?'Categoria personalizada':'Categoria padrão';
-  document.getElementById('editCatNome').value=c.label;
-  iconSelEdit=c.icon;
-  document.querySelectorAll('#editIconChips .chip').forEach(ch=>{
-    ch.classList.toggle('selected',ch.textContent.trim()===c.icon);
-  });
-  document.getElementById('modalEditCat').classList.add('open');
-};
-
-window.salvarEdicaoCat=async function(){
-  if(!editCatCtx)return;
-  const label=document.getElementById('editCatNome').value.trim();
-  const icon=iconSelEdit||'⚙️';
-  if(!label){alert('Informe o nome.');return;}
-  setSS('syncing');
-  try{
-    if(editCatCtx.isExt){
-      // Atualiza categoria personalizada
-      await updateDoc(doc(db,'categorias',editCatCtx.isExt._docId),{label,icon});
-    } else {
-      // Para padrão: salva como nova entrada no Firebase com mesmo tipo
-      const existing=catExt.find(c=>c.tipo===editCatCtx.tipo);
-      if(existing){
-        await updateDoc(doc(db,'categorias',existing._docId),{label,icon});
-      } else {
-        await addDoc(collection(db,'categorias'),{tipo:editCatCtx.tipo,label,icon,cls:'cat-custom'});
-      }
-    }
-    closeModal('modalEditCat');toast('Categoria atualizada! ✓');setSS('online');
-  }catch(e){alert('Erro: '+e.message);}
-};
-
-window.delCategoria=async function(docId){
-  if(!confirm('Remover esta categoria personalizada?'))return;
-  setSS('syncing');
-  await deleteDoc(doc(db,'categorias',docId));
-  setSS('online');toast('Categoria removida.');
-};
-
-window.toast=function(msg){const t=document.createElement('div');t.style.cssText='position:fixed;bottom:94px;left:50%;transform:translateX(-50%);background:#4ade80;color:#000;font-weight:700;padding:11px 22px;border-radius:30px;font-size:0.82rem;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:fadeUp .3s ease;white-space:nowrap';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500);};
-</script>
-</body>
-</html>
+  document.querySelectorAll('#editIconChips .chip').forEach(c=>c.classList.rem
