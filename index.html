@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>InfraLog</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#080c14;--surface:#0f1520;--surface2:#151e2e;--surface3:#1c2740;
+  --border:#1e2d47;--accent:#00d4ff;--accent2:#0099cc;--green:#4ade80;
+  --blue:#60a5fa;--purple:#a78bfa;--orange:#fb923c;--danger:#f87171;
+  --text:#e2e8f0;--muted:#546e8a;--radius:13px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:90px;}
+
+.sync-bar{background:var(--surface2);border-bottom:1px solid var(--border);padding:5px 16px;display:flex;align-items:center;gap:6px;font-size:0.62rem;color:var(--muted);}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .3s;}
+.sync-dot.online{background:var(--green);box-shadow:0 0 6px var(--green);}
+.sync-dot.syncing{background:var(--accent);}
+
+header{background:linear-gradient(135deg,#0a1020,#080c14);border-bottom:1px solid var(--border);padding:13px 16px;position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:10px;}
+header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);}
+.logo-text{font-size:1.2rem;font-weight:800;letter-spacing:-0.5px;}
+.logo-text .i1{color:var(--accent);}
+.logo-text .i2{color:var(--text);}
+.obra-tag{margin-left:auto;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-family:'DM Mono',monospace;font-size:0.66rem;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+.tabs{display:flex;overflow-x:auto;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:56px;z-index:99;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex:1;min-width:66px;padding:11px 4px;font-size:0.6rem;font-weight:700;letter-spacing:.4px;text-transform:uppercase;text-align:center;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:color .2s;}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+.page{display:none;padding:14px;}.page.active{display:block;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px;}
+.card-title{font-size:0.6rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:14px;}
+.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:11px 6px;text-align:center;}
+.stat-num{font-size:1.3rem;font-weight:800;color:var(--accent);line-height:1;}
+.stat-label{font-size:0.54rem;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-top:3px;}
+
+.pb-wrap{background:rgba(0,0,0,.4);border-radius:100px;overflow:hidden;margin:4px 0;}
+.pb-fill{border-radius:100px;transition:width .5s ease;}
+.pb-h8{height:8px;}.pb-h14{height:14px;}
+.c-green{background:linear-gradient(90deg,#22c55e,#4ade80);}
+.c-yellow{background:linear-gradient(90deg,#f59e0b,#fbbf24);}
+.c-blue{background:linear-gradient(90deg,#3b82f6,#60a5fa);}
+.c-cyan{background:linear-gradient(90deg,#0099cc,#00d4ff);}
+
+.cat-badge{display:inline-flex;align-items:center;gap:5px;border-radius:8px;padding:3px 9px;font-size:0.68rem;font-weight:700;}
+.cat-pavim{background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.35);color:var(--blue);}
+.cat-dren{background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.35);color:var(--green);}
+.cat-terra{background:rgba(251,146,60,.12);border:1px solid rgba(251,146,60,.35);color:var(--orange);}
+.cat-estac{background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.35);color:var(--purple);}
+.cat-custom{background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.35);color:var(--accent);}
+
+.secao-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
+.secao-header{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;}
+.secao-cod{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#000;font-weight:800;font-size:0.76rem;border-radius:8px;padding:4px 10px;min-width:34px;text-align:center;}
+.secao-info{flex:1;min-width:0;}.secao-name{font-weight:700;font-size:0.86rem;}.secao-sub{font-size:0.6rem;color:var(--muted);margin-top:2px;}
+.secao-pct{font-family:'DM Mono',monospace;font-size:0.78rem;font-weight:700;min-width:38px;text-align:right;}
+.secao-body{display:none;border-top:1px solid var(--border);}.secao-body.open{display:block;}
+.secao-actions{display:flex;gap:6px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surface2);}
+
+.cat-block{border-bottom:1px solid var(--border);padding:12px 14px;}.cat-block:last-child{border-bottom:none;}
+.cat-block-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.cat-block-pct{font-family:'DM Mono',monospace;font-size:0.82rem;font-weight:700;margin-left:auto;}
+
+.atv-row{display:flex;align-items:center;gap:7px;padding:8px 0;border-bottom:1px solid var(--border);}.atv-row:last-child{border-bottom:none;}
+.atv-info{flex:1;min-width:0;}.atv-nome{font-size:0.76rem;font-weight:600;}.atv-meta{font-family:'DM Mono',monospace;font-size:0.61rem;color:var(--muted);margin-top:1px;}
+.atv-pct{font-family:'DM Mono',monospace;font-size:0.78rem;font-weight:700;min-width:38px;text-align:right;}
+.btn-lancar{background:var(--surface2);border:1px solid var(--border);color:var(--accent);border-radius:7px;padding:5px 8px;font-size:0.65rem;font-weight:700;cursor:pointer;white-space:nowrap;}
+
+.form-group{margin-bottom:12px;}
+.form-label{font-size:0.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;display:block;}
+input,select,textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Syne',sans-serif;font-size:0.87rem;padding:10px 12px;outline:none;transition:border-color .2s;-webkit-appearance:none;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+select option{background:var(--surface2);}
+.btn-primary{width:100%;background:linear-gradient(135deg,var(--accent2),var(--accent));color:#000;border:none;border-radius:10px;padding:13px;font-family:'Syne',sans-serif;font-size:0.87rem;font-weight:800;cursor:pointer;transition:opacity .2s;}
+.btn-primary:active{opacity:.8;}
+.btn-secondary{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px;font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;margin-bottom:10px;}
+.btn-sm-accent{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:var(--accent);border-radius:7px;padding:5px 10px;font-family:'Syne',sans-serif;font-size:0.68rem;font-weight:700;cursor:pointer;}
+.btn-sm-danger{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:var(--danger);border-radius:7px;padding:5px 10px;font-family:'Syne',sans-serif;font-size:0.68rem;font-weight:700;cursor:pointer;}
+.btn-danger{background:transparent;border:1px solid var(--danger);color:var(--danger);border-radius:7px;padding:5px 9px;font-size:0.66rem;font-weight:700;cursor:pointer;}
+.btn-export{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;border:none;border-radius:11px;font-family:'Syne',sans-serif;font-size:0.87rem;font-weight:800;cursor:pointer;width:100%;margin-bottom:10px;}
+.btn-pdf{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;}
+.btn-excel{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;}
+
+.chip-select{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.chip{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 11px;font-size:0.69rem;cursor:pointer;transition:all .2s;}
+.chip.selected{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700;}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:20px 20px 0 0;border-top:2px solid var(--accent);padding:20px 16px 34px;width:100%;max-height:92vh;overflow-y:auto;}
+.modal-title{font-size:1rem;font-weight:800;margin-bottom:3px;}
+.modal-sub{font-size:0.7rem;color:var(--muted);margin-bottom:16px;font-family:'DM Mono',monospace;}
+.modal-close{float:right;background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;}
+
+/* FOTO */
+.foto-upload-area{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s;position:relative;}
+.foto-upload-area:active{border-color:var(--accent);}
+.foto-upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.foto-preview{width:100%;border-radius:10px;margin-top:8px;max-height:200px;object-fit:cover;display:none;}
+.foto-thumb{width:70px;height:70px;border-radius:8px;object-fit:cover;cursor:pointer;border:2px solid var(--border);}
+.foto-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);border-radius:20px;padding:2px 8px;font-size:0.6rem;color:var(--accent);margin-top:4px;cursor:pointer;}
+
+/* MODAL FOTO GRANDE */
+.foto-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:300;align-items:center;justify-content:center;}
+.foto-modal.open{display:flex;}
+.foto-modal img{max-width:95vw;max-height:90vh;border-radius:10px;object-fit:contain;}
+.foto-modal-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.1);border:none;color:#fff;font-size:1.5rem;width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+.hist-item{background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--accent);}
+.tag{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:2px 8px;font-size:0.57rem;color:var(--muted);margin:2px;font-family:'DM Mono',monospace;}
+.empty{text-align:center;padding:36px 20px;color:var(--muted);}.empty-icon{font-size:2.5rem;margin-bottom:10px;}.empty-text{font-size:0.8rem;line-height:1.6;}
+.divider{font-size:0.57rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:10px 0 6px;border-bottom:1px solid var(--border);margin-bottom:10px;}
+.input-row{display:flex;gap:8px;}.input-row>*{flex:1;}
+.secao-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px;}
+.secao-mini{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:11px;}
+.secao-mini .cod{font-size:0.7rem;font-weight:800;color:var(--accent);}.secao-mini .mpct{font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:700;margin:4px 0 5px;}
+.cat-entry{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;}
+.cat-entry-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.atv-edit-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);}.atv-edit-row:last-child{border-bottom:none;}
+
+.loading-screen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;}
+.loading-screen.hidden{display:none;}
+.spinner{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes fadeUp{from{opacity:0;transform:translate(-50%,10px);}to{opacity:1;transform:translate(-50%,0);}}
+
+/* PROGRESS UPLOAD */
+.upload-progress{background:var(--surface2);border-radius:8px;padding:10px 12px;margin-top:8px;display:none;}
+.upload-progress.show{display:block;}
+.upload-bar{height:6px;background:var(--bg);border-radius:100px;overflow:hidden;margin-top:6px;}
+.upload-bar-fill{height:6px;background:var(--accent);border-radius:100px;transition:width .3s;}
+.btn-foto-src{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:10px 6px;font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;}
+.btn-foto-src:active{background:var(--surface3);border-color:var(--accent);color:var(--accent);}
+.foto-ts-badge{font-size:0.6rem;color:var(--muted);margin-top:5px;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:4px;}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-screen" id="loadingScreen">
+  <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style="filter:drop-shadow(0 0 10px rgba(0,212,255,.6))">
+    <rect x="4" y="28" width="8" height="20" rx="2" fill="#00d4ff" opacity="0.5"/>
+    <rect x="16" y="20" width="8" height="28" rx="2" fill="#00d4ff" opacity="0.7"/>
+    <rect x="28" y="10" width="8" height="38" rx="2" fill="#00d4ff"/>
+    <rect x="40" y="18" width="8" height="30" rx="2" fill="#00d4ff" opacity="0.8"/>
+    <path d="M8 24 L20 16 L32 6 L44 14" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+    <circle cx="8" cy="24" r="3" fill="#00d4ff"/><circle cx="20" cy="16" r="3" fill="#00d4ff"/>
+    <circle cx="32" cy="6" r="3" fill="#00d4ff"/><circle cx="44" cy="14" r="3" fill="#00d4ff"/>
+  </svg>
+  <div style="font-size:1.8rem;font-weight:800;letter-spacing:-1px"><span style="color:var(--accent)">Infra</span><span style="color:var(--text)">Log</span></div>
+  <div class="spinner"></div>
+  <div style="font-size:0.78rem;color:var(--muted)">Conectando ao servidor...</div>
+</div>
+
+<!-- MODAL USUÁRIO -->
+<div class="modal-overlay" id="modalUser">
+  <div class="modal">
+    <div style="text-align:center;margin-bottom:18px">
+      <svg width="48" height="48" viewBox="0 0 56 56" fill="none" style="margin:0 auto 10px;display:block;filter:drop-shadow(0 0 8px rgba(0,212,255,.5))">
+        <rect x="4" y="28" width="8" height="20" rx="2" fill="#00d4ff" opacity="0.5"/>
+        <rect x="16" y="20" width="8" height="28" rx="2" fill="#00d4ff" opacity="0.7"/>
+        <rect x="28" y="10" width="8" height="38" rx="2" fill="#00d4ff"/>
+        <rect x="40" y="18" width="8" height="30" rx="2" fill="#00d4ff" opacity="0.8"/>
+        <path d="M8 24 L20 16 L32 6 L44 14" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+      </svg>
+      <div style="font-size:1.4rem;font-weight:800"><span style="color:var(--accent)">Infra</span><span style="color:var(--text)">Log</span></div>
+      <div style="font-size:0.72rem;color:var(--muted);margin-top:4px">Gestão de Obras em Campo</div>
+    </div>
+    <div class="modal-title">👷 Identificação</div>
+    <div class="modal-sub">Seu nome aparecerá nos registros da equipe</div>
+    <div class="form-group"><label class="form-label">Seu Nome</label><input type="text" id="inputUserName" placeholder="Ex: Lucas, João..." maxlength="30"></div>
+    <button class="btn-primary" onclick="confirmarUsuario()">Entrar no InfraLog →</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appShell" style="display:none">
+  <div class="sync-bar">
+    <div class="sync-dot" id="syncDot"></div>
+    <span id="syncStatus">Conectando...</span>
+    <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent)" id="userLabel"></span>
+  </div>
+  <header>
+    <svg width="28" height="28" viewBox="0 0 56 56" fill="none" style="filter:drop-shadow(0 0 6px rgba(0,212,255,.5));flex-shrink:0">
+      <rect x="4" y="28" width="8" height="20" rx="2" fill="#00d4ff" opacity="0.5"/>
+      <rect x="16" y="20" width="8" height="28" rx="2" fill="#00d4ff" opacity="0.7"/>
+      <rect x="28" y="10" width="8" height="38" rx="2" fill="#00d4ff"/>
+      <rect x="40" y="18" width="8" height="30" rx="2" fill="#00d4ff" opacity="0.8"/>
+      <path d="M8 24 L20 16 L32 6 L44 14" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+    </svg>
+    <div class="logo-text"><span class="i1">Infra</span><span class="i2">Log</span></div>
+    <div class="obra-tag" id="obraTag">—</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="nav('dashboard')">📊 Visão</button>
+    <button class="tab" onclick="nav('secoes')">📍 Seções</button>
+    <button class="tab" onclick="nav('lancar')">✏️ Lançar</button>
+    <button class="tab" onclick="nav('historico')">🕓 Histórico</button>
+    <button class="tab" onclick="nav('relatorio')">📄 Relatório</button>
+    <button class="tab" onclick="nav('config')">⚙️ Config</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="page-dashboard" class="page active">
+    <div class="stats-row" id="statsRow"></div>
+    <div class="card"><div class="card-title">Avanço Geral da Obra</div><div id="dashPct" style="font-size:2rem;font-weight:800;color:var(--accent)">0%</div><div class="pb-wrap pb-h14" style="margin-top:8px"><div class="pb-fill c-cyan" id="dashBar" style="width:0%"></div></div></div>
+    <div class="card-title">Por Seção</div><div class="secao-grid" id="secaoGrid"></div>
+    <div class="card"><div class="card-title">Por Categoria</div><div id="catDash"></div></div>
+    <div class="card"><div class="card-title">Por Atividade</div><div id="atvDash"></div></div>
+  </div>
+
+  <!-- SEÇÕES -->
+  <div id="page-secoes" class="page"><div class="card-title">Seções Cadastradas</div><div id="secoesList"></div></div>
+
+  <!-- LANÇAR -->
+  <div id="page-lancar" class="page">
+    <div class="card">
+      <div class="card-title">Lançar Execução</div>
+      <div class="form-group"><label class="form-label">Seção</label><select id="rSecao" onchange="rLoadCat()"></select></div>
+      <div class="form-group"><label class="form-label">Categoria</label><select id="rCat" onchange="rLoadAtv()"></select></div>
+      <div class="form-group"><label class="form-label">Atividade</label><select id="rAtv" onchange="rLoadUnid()"></select></div>
+      <div class="form-group"><label class="form-label">Quantidade Executada</label><div class="input-row"><input type="number" id="rQtd" placeholder="0" min="0" step="0.01"><input type="text" id="rUnid" readonly style="max-width:78px"></div></div>
+      <div class="form-group"><label class="form-label">Data de Execução</label><input type="date" id="rData"></div>
+      <div class="form-group"><label class="form-label">Observações (opcional)</label><textarea id="rObs" rows="2" placeholder="Ex: Chuva à tarde, solo mole..."></textarea></div>
+      <div class="form-group">
+        <label class="form-label">📷 Foto (opcional)</label>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button type="button" class="btn-foto-src" onclick="document.getElementById('fotoInputLancarCam').click()">📷 Câmera</button>
+          <button type="button" class="btn-foto-src" onclick="document.getElementById('fotoInputLancarGal').click()">🖼️ Galeria</button>
+        </div>
+        <input type="file" id="fotoInputLancarCam" accept="image/*" capture="environment" style="display:none" onchange="previewFoto('Lancar',this)">
+        <input type="file" id="fotoInputLancarGal" accept="image/*" style="display:none" onchange="previewFoto('Lancar',this)">
+        <div id="fotoPreviewAreaLancar" style="display:none;margin-top:4px">
+          <img id="fotoPreviewLancar" class="foto-preview" style="display:block">
+          <div class="foto-ts-badge" id="fotoTsLancarDisplay"></div>
+          <button style="margin-top:4px;font-size:0.7rem;background:none;border:none;color:var(--danger);cursor:pointer" onclick="removerFoto('Lancar')">✕ Remover foto</button>
+        </div>
+        <div class="upload-progress" id="uploadProgressLancar">
+          <div style="font-size:0.72rem;color:var(--muted)" id="uploadTxtLancar">Comprimindo foto...</div>
+          <div class="upload-bar"><div class="upload-bar-fill" id="uploadBarLancar" style="width:0%"></div></div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="lancar()">✓ REGISTRAR EXECUÇÃO</button>
+    </div>
+  </div>
+
+  <!-- HISTÓRICO -->
+  <div id="page-historico" class="page">
+    <div class="form-group"><label class="form-label">Filtrar por Seção</label><select id="filtSec" onchange="renderHist()"><option value="">Todas</option></select></div>
+    <div id="histList"></div>
+  </div>
+
+  <!-- RELATÓRIO -->
+  <div id="page-relatorio" class="page">
+    <div class="card">
+      <div class="card-title">Filtros</div>
+      <div class="form-group"><label class="form-label">Seção</label><select id="relSec" onchange="gerarPrevia()"><option value="">Todas</option></select></div>
+      <div class="form-group"><label class="form-label">Categoria</label><select id="relCat" onchange="gerarPrevia()"><option value="">Todas</option></select></div>
+      <div class="form-group"><label class="form-label">Data Início</label><input type="date" id="relDI" onchange="gerarPrevia()"></div>
+      <div class="form-group"><label class="form-label">Data Fim</label><input type="date" id="relDF" onchange="gerarPrevia()"></div>
+    </div>
+    <button class="btn-export btn-pdf" onclick="exportPDF()">📄 Exportar Relatório PDF</button>
+    <button class="btn-export btn-excel" onclick="exportExcel()">📊 Exportar Planilha Excel</button>
+    <div class="card"><div class="card-title">Prévia</div><div id="relPrevia"></div></div>
+  </div>
+
+  <!-- CONFIG -->
+  <div id="page-config" class="page">
+    <div class="card">
+      <div class="card-title">Dados da Obra</div>
+      <div class="form-group"><label class="form-label">Nome da Obra</label><input type="text" id="cNome" placeholder="Pavimentação Av. Central"></div>
+      <div class="form-group"><label class="form-label">Responsável</label><input type="text" id="cResp" placeholder="Seu nome"></div>
+      <div class="form-group"><label class="form-label">Contrato / ART Nº</label><input type="text" id="cContrato" placeholder="Nº do contrato"></div>
+      <button class="btn-primary" onclick="salvarCfg()">Salvar</button>
+    </div>
+
+    <div class="card" style="margin-top:4px">
+      <div class="card-title">🔧 Atividades</div>
+      <p style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Todas as atividades — padrão e personalizadas — podem ser editadas.</p>
+      <div id="listaAtividades"></div>
+      <div class="divider" style="margin-top:14px">Adicionar Nova Atividade</div>
+      <div class="form-group"><label class="form-label">Nome da Atividade</label><input type="text" id="nsNome" placeholder="Ex: Sarjeta de Concreto..."></div>
+      <div class="form-group">
+        <label class="form-label">Unidade de Medida</label>
+        <div class="chip-select" id="unidChips">
+          <div class="chip" onclick="selUnid(this,'m³')">m³</div><div class="chip" onclick="selUnid(this,'m²')">m²</div>
+          <div class="chip" onclick="selUnid(this,'m')">m</div><div class="chip" onclick="selUnid(this,'t')">t</div>
+          <div class="chip" onclick="selUnid(this,'un')">un</div><div class="chip" onclick="selUnid(this,'kg')">kg</div>
+          <div class="chip" onclick="selUnid(this,'vb')">vb</div>
+        </div>
+        <input type="text" id="nsUnid" placeholder="Ou digite outra..." style="margin-top:8px">
+      </div>
+      <button class="btn-primary" onclick="addAtividade()">+ Adicionar Atividade</button>
+    </div>
+
+    <div class="card" style="margin-top:4px">
+      <div class="card-title">🏷️ Categorias</div>
+      <p style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Crie e edite as categorias disponíveis para suas seções.</p>
+      <div id="listaCategorias"></div>
+      <div class="divider" style="margin-top:14px">Adicionar Nova Categoria</div>
+      <div class="form-group"><label class="form-label">Nome da Categoria</label><input type="text" id="ncNome" placeholder="Ex: Drenagem, Contenção, Sinalização..."></div>
+      <div class="form-group">
+        <label class="form-label">Ícone</label>
+        <div class="chip-select" id="iconChips">
+          <div class="chip" onclick="selIcon(this,'🛣️')">🛣️</div>
+          <div class="chip" onclick="selIcon(this,'💧')">💧</div>
+          <div class="chip" onclick="selIcon(this,'🏗️')">🏗️</div>
+          <div class="chip" onclick="selIcon(this,'🅿️')">🅿️</div>
+          <div class="chip" onclick="selIcon(this,'🚧')">🚧</div>
+          <div class="chip" onclick="selIcon(this,'⚡')">⚡</div>
+          <div class="chip" onclick="selIcon(this,'🌿')">🌿</div>
+          <div class="chip" onclick="selIcon(this,'🔩')">🔩</div>
+          <div class="chip" onclick="selIcon(this,'🧱')">🧱</div>
+          <div class="chip" onclick="selIcon(this,'🚰')">🚰</div>
+          <div class="chip" onclick="selIcon(this,'💡')">💡</div>
+          <div class="chip" onclick="selIcon(this,'📐')">📐</div>
+          <div class="chip" onclick="selIcon(this,'⚙️')">⚙️</div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="addCategoria()">+ Adicionar Categoria</button>
+    </div>
+
+    <div class="card" style="margin-top:4px">
+      <div class="card-title">📍 Cadastrar Nova Seção</div>
+      <div class="form-group"><label class="form-label">Código</label><input type="text" id="sCod" placeholder="A" maxlength="6" style="text-transform:uppercase"></div>
+      <div class="form-group"><label class="form-label">Descrição (opcional)</label><input type="text" id="sDesc" placeholder="Ex: Trecho Rua das Flores"></div>
+      <div class="divider" style="margin-top:4px">Categorias desta Seção</div>
+      <p style="font-size:0.72rem;color:var(--muted);margin-bottom:12px">Ex: Pavimentação, Drenagem, Terraplanagem...</p>
+      <div id="catEntries"></div>
+      <button class="btn-secondary" onclick="addCatEntry()">+ Adicionar Categoria</button>
+      <button class="btn-primary" onclick="salvarSecao()">✓ Salvar Seção</button>
+    </div>
+
+    <div class="card" style="margin-top:4px"><div class="card-title">Seções Cadastradas</div><div id="cfgSecList"></div></div>
+
+    <div class="card" style="margin-top:4px;border-color:var(--danger)">
+      <div class="card-title" style="color:var(--danger)">⚠️ Zona de Perigo</div>
+      <button class="btn-danger" style="width:100%;padding:12px" onclick="resetTudo()">🗑 Apagar todos os registros</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LANÇAR (atalho da seção) -->
+<div class="modal-overlay" id="modalLancar">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modalLancar')">✕</button>
+    <div class="modal-title" id="mlTitle">Registrar</div>
+    <div class="modal-sub" id="mlSub"></div>
+    <div class="form-group"><label class="form-label">Quantidade Executada</label><div class="input-row"><input type="number" id="mlQtd" placeholder="0" min="0" step="0.01"><input type="text" id="mlUnid" readonly style="max-width:78px"></div></div>
+    <div class="form-group"><label class="form-label">Data</label><input type="date" id="mlData"></div>
+    <div class="form-group"><label class="form-label">Obs</label><textarea id="mlObs" rows="2" placeholder="Observações..."></textarea></div>
+    <div class="form-group">
+      <label class="form-label">📷 Foto (opcional)</label>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button type="button" class="btn-foto-src" onclick="document.getElementById('fotoInputModalCam').click()">📷 Câmera</button>
+        <button type="button" class="btn-foto-src" onclick="document.getElementById('fotoInputModalGal').click()">🖼️ Galeria</button>
+      </div>
+      <input type="file" id="fotoInputModalCam" accept="image/*" capture="environment" style="display:none" onchange="previewFoto('Modal',this)">
+      <input type="file" id="fotoInputModalGal" accept="image/*" style="display:none" onchange="previewFoto('Modal',this)">
+      <div id="fotoPreviewAreaModal" style="display:none;margin-top:4px">
+        <img id="fotoPreviewModal" class="foto-preview" style="display:block">
+        <div class="foto-ts-badge" id="fotoTsModalDisplay"></div>
+        <button style="margin-top:4px;font-size:0.7rem;background:none;border:none;color:var(--danger);cursor:pointer" onclick="removerFoto('Modal')">✕ Remover foto</button>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="confirmarModal()">✓ REGISTRAR</button>
+  </div>
+</div>
+
+<!-- MODAL EDITAR SEÇÃO -->
+<div class="modal-overlay" id="modalEditSecao">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modalEditSecao')">✕</button>
+    <div class="modal-title">✏️ Editar Seção</div>
+    <div class="modal-sub" id="editSecSub"></div>
+    <div class="form-group"><label class="form-label">Código</label><input type="text" id="editSecCod" maxlength="6" style="text-transform:uppercase"></div>
+    <div class="form-group"><label class="form-label">Descrição</label><input type="text" id="editSecDesc" placeholder="Descrição da seção"></div>
+    <div class="divider">Categorias e Atividades</div>
+    <div id="editCatList"></div>
+    <button class="btn-secondary" onclick="addEditCatEntry()" style="margin-top:4px">+ Adicionar Categoria</button>
+    <button class="btn-primary" onclick="salvarEdicaoSecao()" style="margin-top:8px">✓ Salvar Alterações</button>
+  </div>
+</div>
+
+<!-- MODAL EDITAR CATEGORIA -->
+<div class="modal-overlay" id="modalEditCat">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modalEditCat')">✕</button>
+    <div class="modal-title">✏️ Editar Categoria</div>
+    <div class="modal-sub" id="editCatSub"></div>
+    <div class="form-group" style="margin-top:12px">
+      <label class="form-label">Nome da Categoria</label>
+      <input type="text" id="editCatNome">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ícone</label>
+      <div class="chip-select" id="editIconChips">
+        <div class="chip" onclick="selIconEdit(this,'🛣️')">🛣️</div>
+        <div class="chip" onclick="selIconEdit(this,'💧')">💧</div>
+        <div class="chip" onclick="selIconEdit(this,'🏗️')">🏗️</div>
+        <div class="chip" onclick="selIconEdit(this,'🅿️')">🅿️</div>
+        <div class="chip" onclick="selIconEdit(this,'🚧')">🚧</div>
+        <div class="chip" onclick="selIconEdit(this,'⚡')">⚡</div>
+        <div class="chip" onclick="selIconEdit(this,'🌿')">🌿</div>
+        <div class="chip" onclick="selIconEdit(this,'🔩')">🔩</div>
+        <div class="chip" onclick="selIconEdit(this,'🧱')">🧱</div>
+        <div class="chip" onclick="selIconEdit(this,'🚰')">🚰</div>
+        <div class="chip" onclick="selIconEdit(this,'💡')">💡</div>
+        <div class="chip" onclick="selIconEdit(this,'📐')">📐</div>
+        <div class="chip" onclick="selIconEdit(this,'⚙️')">⚙️</div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="salvarEdicaoCat()">✓ Salvar</button>
+  </div>
+</div>
+
+<!-- MODAL EDITAR ATIVIDADE -->
+<div class="modal-overlay" id="modalEditAtv">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modalEditAtv')">✕</button>
+    <div class="modal-title">✏️ Editar Atividade</div>
+    <div class="modal-sub" id="editAtvSub">Padrão ou personalizada</div>
+    <div class="form-group" style="margin-top:12px"><label class="form-label">Nome da Atividade</label><input type="text" id="editAtvNome"></div>
+    <div class="form-group"><label class="form-label">Unidade de Medida</label><input type="text" id="editAtvUnid"></div>
+    <button class="btn-primary" onclick="salvarEdicaoAtv()">✓ Salvar</button>
+  </div>
+</div>
+
+<!-- MODAL VER FOTO GRANDE -->
+<div class="foto-modal" id="fotoModal" onclick="this.classList.remove('open')">
+  <button class="foto-modal-close" onclick="document.getElementById('fotoModal').classList.remove('open')">✕</button>
+  <img id="fotoModalImg" src="" alt="Foto">
+</div>
+
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+import{getFirestore,doc,setDoc,updateDoc,addDoc,deleteDoc,getDocs,collection,onSnapshot,query,orderBy,serverTimestamp,writeBatch}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+const firebaseConfig={apiKey:"AIzaSyD9QWIrlTkaScCmeTkTJGDLBxoFB3NpYbU",authDomain:"controle-de-obra-9c34e.firebaseapp.com",projectId:"controle-de-obra-9c34e",storageBucket:"controle-de-obra-9c34e.firebasestorage.app",messagingSenderId:"609118397882",appId:"1:609118397882:web:ca6802009ea8f11dcea983"};
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+// ── ATIVIDADES PADRÃO (agora editáveis via overrides no Firestore) ──
+const ATV_PAD=[
+  {id:'corte',nome:'Corte e Aterro',unid:'m³'},{id:'rachao',nome:'Lançamento de Rachão',unid:'m³'},
+  {id:'brita',nome:'Brita Graduada',unid:'m³'},{id:'escavacao',nome:'Escavação de Vala',unid:'m³'},
+  {id:'fundo',nome:'Preparação Fundo de Vala',unid:'m'},{id:'pead',nome:'Assentamento Tubo PEAD',unid:'m'},
+  {id:'caixa',nome:'Caixa Premoldada',unid:'un'},{id:'reaterro',nome:'Reaterro Compactado',unid:'m³'},
+  {id:'concret',nome:'Concretagem de Caixas',unid:'m³'},{id:'tampas',nome:'Instalação de Tampas',unid:'un'},
+  {id:'meioFio',nome:'Meio Fio',unid:'m'},{id:'guia',nome:'Guia Chapéu',unid:'m'},
+  {id:'imprim',nome:'Imprimação (RR-1C)',unid:'m²'},{id:'rr2c',nome:'Pintura de Ligação RR-2C',unid:'m²'},
+  {id:'cbuq',nome:'CBUQ (Asfalto)',unid:'t'},{id:'faixas',nome:'Pintura de Faixas',unid:'m²'},
+  {id:'placas',nome:'Instalação de Placas',unid:'un'},
+];
+const CAT_PAD=[
+  {tipo:'pavim',label:'Pavimentação',cls:'cat-pavim',icon:'🛣️'},
+  {tipo:'dren',label:'Drenagem',cls:'cat-dren',icon:'💧'},
+  {tipo:'terra',label:'Terraplanagem',cls:'cat-terra',icon:'🏗️'},
+  {tipo:'estac',label:'Estacionamento',cls:'cat-estac',icon:'🅿️'},
+  {tipo:'custom',label:'Outro',cls:'cat-custom',icon:'⚙️'},
+];
+
+let cfg={nome:'Minha Obra',resp:'',contrato:''};
+let atvOverrides={};  // {id: {nome, unid}} para sobrescrever padrões
+let atvExt=[];        // atividades totalmente novas
+let catExt=[];        // categorias personalizadas do Firebase
+let iconSel='';let iconSelEdit='';
+let secoes=[],regs=[],mCtx=null,unidSel='',currentUser='',editSecCtx=null,editAtvCtx=null;
+let fotoDataLancar=null,fotoDataModal=null,fotoTsLancar=null,fotoTsModal=null;
+const sortAlpha=(arr,key='nome')=>arr.slice().sort((a,b)=>(a[key]||'').localeCompare(b[key]||'','pt-BR',{sensitivity:'base'}));
+
+// ── ATIVIDADES: mescla padrão + overrides + extras ──
+function todasAtv(){
+  const base=ATV_PAD.map(a=>({...a,...(atvOverrides[a.id]||{})}));
+  return sortAlpha([...base,...atvExt]);
+}
+function getAtv(id){
+  if(!id)return{nome:'?',unid:''};
+  const todas=todasAtv();
+  // 1. Busca exata por id ou _docId
+  let a=todas.find(a=>a.id===id||a._docId===id);
+  if(a)return{...a};
+  // 2. Busca pelo sufixo do ID antigo (formato: timestamp_random_nomekey)
+  // Ex: "1776184478687_djp9f_rachao" -> sufixo "rachao" -> bate com id que contém "rachao"
+  const sufixo=id.split('_').slice(-1)[0];
+  if(sufixo&&sufixo.length>2){
+    a=todas.find(a=>(a.id||'').includes(sufixo)||(a._docId||'').includes(sufixo));
+    if(a)return{...a};
+    // 3. Busca pelo sufixo no nome da atividade (match parcial)
+    const sufNorm=sufixo.toLowerCase();
+    a=todas.find(a=>(a.nome||'').toLowerCase().includes(sufNorm));
+    if(a)return{...a};
+  }
+  // 4. Fallback: retorna id bruto
+  return{nome:id,unid:''};
+}
+const getSec=id=>secoes.find(s=>s.id===id);
+const getCat=(sec,catId)=>(sec?.categorias||[]).find(c=>c.id===catId);
+const execTot=(secId,catId,atvId)=>regs.filter(r=>r.secaoId===secId&&r.catId===catId&&r.atvId===atvId).reduce((a,r)=>a+r.qtd,0);
+const pct=(v,t)=>!t?0:Math.min(100,Math.round(v/t*100));
+const hoje=()=>new Date().toISOString().split('T')[0];
+const fmtD=d=>{if(!d)return'';const[y,m,dd]=d.split('-');return`${dd}/${m}/${y}`;};
+const nF=n=>Number(n).toLocaleString('pt-BR',{maximumFractionDigits:2});
+function todasCat(){
+  const extras=catExt.filter(c=>!CAT_PAD.some(p=>p.tipo===c.tipo));
+  return sortAlpha([...CAT_PAD,...extras],'label');
+}
+const catInfo=tipo=>todasCat().find(c=>c.tipo===tipo)||{label:tipo,cls:'cat-custom',icon:'⚙️'};
+const secPct=s=>{let t=0,e=0;(s.categorias||[]).forEach(cat=>(cat.atividades||[]).forEach(a=>{t+=a.qtdTotal||0;e+=execTot(s.id,cat.id,a.id);}));return pct(e,t);};
+const catPct=(sec,cat)=>{let t=0,e=0;(cat.atividades||[]).forEach(a=>{t+=a.qtdTotal||0;e+=execTot(sec.id,cat.id,a.id);});return pct(e,t);};
+
+function setSS(state){
+  const dot=document.getElementById('syncDot'),txt=document.getElementById('syncStatus');
+  if(!dot||!txt)return;
+  dot.className='sync-dot';
+  if(state==='online'){dot.classList.add('online');txt.textContent='Sincronizado ✓';}
+  else if(state==='syncing'){dot.classList.add('syncing');txt.textContent='Sincronizando...';}
+  else txt.textContent='Sem conexão';
+}
+
+function startListeners(){
+  onSnapshot(doc(db,'obra','config'),snap=>{if(snap.exists()){cfg=snap.data();document.getElementById('obraTag').textContent=cfg.nome||'—';}setSS('online');});
+  // Overrides das atividades padrão
+  onSnapshot(collection(db,'atvOverrides'),snap=>{
+    atvOverrides={};snap.docs.forEach(d=>{atvOverrides[d.id]={nome:d.data().nome,unid:d.data().unid};});
+    renderCurrent();
+  });
+  // Atividades extras
+  onSnapshot(collection(db,'atividades'),snap=>{atvExt=sortAlpha(snap.docs.map(d=>{const data=d.data();return{...data,_docId:d.id,id:d.id};}));renderCurrent();});
+  // Categorias personalizadas
+  onSnapshot(collection(db,'categorias'),snap=>{catExt=sortAlpha(snap.docs.map(d=>({...d.data(),_docId:d.id})),'label');renderCurrent();});
+  onSnapshot(collection(db,'secoes'),snap=>{secoes=sortAlpha(snap.docs.map(d=>({...d.data(),id:d.id})),'cod');renderCurrent();});
+  onSnapshot(query(collection(db,'registros'),orderBy('ts','desc')),snap=>{regs=snap.docs.map(d=>({...d.data(),_docId:d.id}));renderCurrent();setSS('online');});
+}
+
+function renderCurrent(){
+  const a=document.querySelector('.page.active')?.id?.replace('page-','');
+  if(a==='dashboard')renderDash();else if(a==='secoes')renderSecoes();else if(a==='lancar')renderLancar();
+  else if(a==='historico')renderHist();else if(a==='relatorio')renderRel();else if(a==='config')renderCfg();
+}
+
+// ── FOTO: COMPRESS + PREVIEW ──
+window.previewFoto=function(ctx,inputEl){
+  const file=inputEl.files[0];if(!file)return;
+  const ts=new Date();
+  if(ctx==='Lancar')fotoTsLancar=ts.toISOString();
+  else fotoTsModal=ts.toISOString();
+  const prog=document.getElementById('uploadProgress'+ctx);
+  const bar=document.getElementById('uploadBar'+ctx);
+  const txt=document.getElementById('uploadTxt'+ctx);
+  if(prog){prog.classList.add('show');if(bar)bar.style.width='30%';if(txt)txt.textContent='Comprimindo foto...';}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      const MAX=800;
+      let w=img.width,h=img.height;
+      if(w>h){if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}}else{if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}}
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      if(bar)bar.style.width='80%';
+      const compressed=canvas.toDataURL('image/jpeg',0.72);
+      if(ctx==='Lancar')fotoDataLancar=compressed;
+      else fotoDataModal=compressed;
+      const preview=document.getElementById('fotoPreview'+ctx);
+      const area=document.getElementById('fotoPreviewArea'+ctx);
+      const tsEl=document.getElementById('fotoTs'+ctx+'Display');
+      preview.src=compressed;
+      if(area)area.style.display='block';
+      if(tsEl){tsEl.textContent='📅 '+ts.toLocaleDateString('pt-BR')+' '+ts.toLocaleTimeString('pt-BR');}
+      if(bar)bar.style.width='100%';
+      setTimeout(()=>{if(prog)prog.classList.remove('show');},600);
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+};
+window.removerFoto=function(ctx){
+  if(ctx==='Lancar'){fotoDataLancar=null;fotoTsLancar=null;}else{fotoDataModal=null;fotoTsModal=null;}
+  const preview=document.getElementById('fotoPreview'+ctx);
+  const area=document.getElementById('fotoPreviewArea'+ctx);
+  const tsEl=document.getElementById('fotoTs'+ctx+'Display');
+  const inputCam=document.getElementById('fotoInput'+ctx+'Cam');
+  const inputGal=document.getElementById('fotoInput'+ctx+'Gal');
+  if(preview){preview.src='';preview.style.display='none';}
+  if(area)area.style.display='none';
+  if(tsEl)tsEl.textContent='';
+  if(inputCam)inputCam.value='';
+  if(inputGal)inputGal.value='';
+};
+window.verFoto=function(src){
+  document.getElementById('fotoModalImg').src=src;
+  document.getElementById('fotoModal').classList.add('open');
+};
+
+// ── USUÁRIO ──
+window.confirmarUsuario=function(){
+  const nome=document.getElementById('inputUserName').value.trim();
+  if(!nome){alert('Informe seu nome.');return;}
+  currentUser=nome;localStorage.setItem('ilUser',nome);
+  document.getElementById('modalUser').classList.remove('open');
+  document.getElementById('userLabel').textContent='👷 '+nome;
+  document.getElementById('appShell').style.display='block';
+  document.getElementById('loadingScreen').classList.add('hidden');
+  startListeners();
+};
+const saved=localStorage.getItem('ilUser');
+if(saved){currentUser=saved;document.getElementById('modalUser').classList.remove('open');document.getElementById('userLabel').textContent='👷 '+saved;document.getElementById('appShell').style.display='block';document.getElementById('loadingScreen').classList.add('hidden');startListeners();}
+else{document.getElementById('loadingScreen').classList.add('hidden');document.getElementById('modalUser').classList.add('open');}
+
+// ── NAV ──
+window.nav=function(n){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+n).classList.add('active');
+  ['dashboard','secoes','lancar','historico','relatorio','config'].forEach((p,i)=>{if(p===n)document.querySelectorAll('.tab')[i].classList.add('active');});
+  renderCurrent();
+};
+
+// ── DASHBOARD ──
+function renderDash(){
+  document.getElementById('obraTag').textContent=cfg.nome||'—';
+  let tG=0,eG=0;
+  secoes.forEach(s=>(s.categorias||[]).forEach(cat=>(cat.atividades||[]).forEach(a=>{tG+=a.qtdTotal||0;eG+=execTot(s.id,cat.id,a.id);})));
+  const ag=pct(eG,tG);
+  document.getElementById('dashPct').textContent=ag+'%';document.getElementById('dashBar').style.width=ag+'%';
+  const rH=regs.filter(r=>r.data===hoje()).length;
+  const totalCats=secoes.reduce((a,s)=>a+(s.categorias||[]).length,0);
+  document.getElementById('statsRow').innerHTML=`<div class="stat-box"><div class="stat-num">${secoes.length}</div><div class="stat-label">Seções</div></div><div class="stat-box"><div class="stat-num" style="color:var(--blue)">${totalCats}</div><div class="stat-label">Categ.</div></div><div class="stat-box"><div class="stat-num" style="color:var(--green)">${ag}%</div><div class="stat-label">Avanço</div></div><div class="stat-box"><div class="stat-num" style="color:var(--accent)">${rH}</div><div class="stat-label">Hoje</div></div>`;
+  const grid=document.getElementById('secaoGrid');
+  if(!secoes.length){grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📍</div><div class="empty-text">Cadastre seções em ⚙️ Config</div></div>';}
+  else grid.innerHTML=secoes.map(s=>{const p=secPct(s);const cor=p>=100?'var(--green)':p>=50?'var(--accent)':'var(--blue)';return`<div class="secao-mini"><div class="cod">Seção ${s.cod}</div><div class="mpct" style="color:${cor}">${p}%</div><div class="pb-wrap pb-h8"><div class="pb-fill" style="background:${cor};width:${p}%"></div></div><div style="font-size:0.57rem;color:var(--muted);margin-top:3px">${s.desc||''}</div></div>`;}).join('');
+  const byCat={};
+  secoes.forEach(s=>(s.categorias||[]).forEach(cat=>{const tipo=cat.tipo||'custom';if(!byCat[tipo])byCat[tipo]={tot:0,exec:0};(cat.atividades||[]).forEach(a=>{byCat[tipo].tot+=a.qtdTotal||0;byCat[tipo].exec+=execTot(s.id,cat.id,a.id);});}));
+  document.getElementById('catDash').innerHTML=!Object.entries(byCat).filter(([,v])=>v.tot>0).length?'<div style="color:var(--muted);font-size:0.78rem">Sem dados.</div>':Object.entries(byCat).filter(([,v])=>v.tot>0).map(([tipo,v])=>{const ci=catInfo(tipo);const p=pct(v.exec,v.tot);const cls=p>=100?'c-green':p>=50?'c-yellow':'c-blue';return`<div style="margin-bottom:11px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><span class="cat-badge ${ci.cls}">${ci.icon} ${ci.label}</span><span style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--accent)">${p}%</span></div><div class="pb-wrap pb-h8"><div class="pb-fill ${cls}" style="width:${p}%"></div></div></div>`;}).join('');
+  const byAtv={};
+  secoes.forEach(s=>(s.categorias||[]).forEach(cat=>(cat.atividades||[]).forEach(a=>{if(!byAtv[a.id])byAtv[a.id]={tot:0,exec:0};byAtv[a.id].tot+=a.qtdTotal||0;byAtv[a.id].exec+=execTot(s.id,cat.id,a.id);})));
+  const ativos=todasAtv().filter(a=>byAtv[a.id]?.tot>0);
+  document.getElementById('atvDash').innerHTML=!ativos.length?'<div style="color:var(--muted);font-size:0.78rem">Sem atividades.</div>':ativos.map(a=>{const p=pct(byAtv[a.id].exec,byAtv[a.id].tot);const cls=p>=100?'c-green':p>=50?'c-yellow':'c-blue';return`<div style="margin-bottom:11px"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:0.73rem;font-weight:600">${a.nome}</span><span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--accent)">${p}%</span></div><div class="pb-wrap pb-h8"><div class="pb-fill ${cls}" style="width:${p}%"></div></div><div style="font-size:0.57rem;color:var(--muted);margin-top:2px">${nF(byAtv[a.id].exec)} / ${nF(byAtv[a.id].tot)} ${a.unid}</div></div>`;}).join('');
+}
+
+// ── SEÇÕES ──
+function renderSecoes(){
+  const el=document.getElementById('secoesList');
+  if(!secoes.length){el.innerHTML='<div class="empty"><div class="empty-icon">📍</div><div class="empty-text">Nenhuma seção cadastrada.<br>Vá em ⚙️ Config.</div></div>';return;}
+  el.innerHTML=secoes.map(s=>{
+    const p=secPct(s);
+    const catBlocos=sortAlpha(s.categorias||[],"tipo").map(cat=>{
+      const ci=catInfo(cat.tipo);const cp=catPct(s,cat);
+      const ccls=cp>=100?'c-green':cp>=50?'c-yellow':'c-blue';
+      const cor=cp>=100?'var(--green)':cp>=50?'var(--accent)':'var(--blue)';
+      const label=cat.tipo==='custom'&&cat.obs?cat.obs:cat.obs?ci.label+' / '+cat.obs:ci.label;
+      const atvRows=sortAlpha(cat.atividades||[]).map(a=>{
+        const info=getAtv(a.id);const ex=execTot(s.id,cat.id,a.id);const ps=pct(ex,a.qtdTotal);
+        const sc=ps>=100?'var(--green)':ps>=50?'var(--accent)':'var(--blue)';
+        return`<div class="atv-row"><div class="atv-info"><div class="atv-nome">${info.nome}</div><div class="atv-meta">${nF(ex)} / ${nF(a.qtdTotal)} ${info.unid}</div><div class="pb-wrap pb-h8"><div class="pb-fill" style="background:${sc};width:${ps}%"></div></div></div><div class="atv-pct" style="color:${sc}">${ps}%</div><button class="btn-lancar" onclick="abrirModal('${s.id}','${cat.id}','${a.id}')">+Lançar</button></div>`;
+      }).join('');
+      return`<div class="cat-block"><div class="cat-block-header"><span class="cat-badge ${ci.cls}">${ci.icon} ${label}</span><div class="cat-block-pct" style="color:${cor}">${cp}%</div></div><div class="pb-wrap pb-h8" style="margin-bottom:8px"><div class="pb-fill ${ccls}" style="width:${cp}%"></div></div>${atvRows}</div>`;
+    }).join('');
+    return`<div class="secao-item"><div class="secao-header" onclick="togSec('sb-${s.id}')"><div class="secao-cod">${s.cod}</div><div class="secao-info"><div class="secao-name">${s.desc||'Seção '+s.cod}</div><div class="secao-sub">${(s.categorias||[]).map(c=>catInfo(c.tipo).label).join(' · ')}</div></div><div class="secao-pct" style="color:${p>=100?'var(--green)':p>=50?'var(--accent)':'var(--blue)'}">${p}%</div><span style="color:var(--muted);margin-left:4px">▾</span></div><div class="secao-body" id="sb-${s.id}"><div class="secao-actions"><button class="btn-sm-accent" onclick="abrirEditSecao('${s.id}');event.stopPropagation()">✏️ Editar</button><button class="btn-sm-danger" onclick="delSecao('${s.id}');event.stopPropagation()">🗑 Excluir</button></div>${catBlocos}</div></div>`;
+  }).join('');
+}
+window.togSec=id=>document.getElementById(id)?.classList.toggle('open');
+
+// ── LANÇAR ──
+function renderLancar(){
+  const curSec=document.getElementById('rSecao').value;
+  document.getElementById('rSecao').innerHTML=secoes.map(s=>`<option value="${s.id}"${s.id===curSec?' selected':''}>Seção ${s.cod}${s.desc?' — '+s.desc:''}</option>`).join('');
+  const curCat=document.getElementById('rCat').value;
+  const curAtv=document.getElementById('rAtv').value;
+  rLoadCat();
+  // Tentar restaurar seleções anteriores
+  if(curCat&&document.getElementById('rCat').querySelector(`option[value="${curCat}"]`)){
+    document.getElementById('rCat').value=curCat;
+    rLoadAtv();
+    if(curAtv&&document.getElementById('rAtv').querySelector(`option[value="${curAtv}"]`)){
+      document.getElementById('rAtv').value=curAtv;rLoadUnid();
+    }
+  }
+  if(!document.getElementById('rData').value)document.getElementById('rData').value=hoje();
+}
+window.rLoadCat=function(){
+  const sec=getSec(document.getElementById('rSecao').value);const sel=document.getElementById('rCat');
+  if(!sec||(sec.categorias||[]).length===0){sel.innerHTML='<option>— sem categorias —</option>';return;}
+  sel.innerHTML=sortAlpha(sec.categorias||[],'tipo').map(cat=>{const ci=catInfo(cat.tipo);const label=cat.tipo==='custom'&&cat.obs?cat.obs:cat.obs?ci.label+' ('+cat.obs+')':ci.label;return`<option value="${cat.id}">${ci.icon} ${label}</option>`;}).join('');
+  rLoadAtv();
+};
+window.rLoadAtv=function(){
+  const sec=getSec(document.getElementById('rSecao').value);const cat=getCat(sec,document.getElementById('rCat').value);const sel=document.getElementById('rAtv');
+  if(!cat||(cat.atividades||[]).length===0){sel.innerHTML='<option>— sem atividades —</option>';return;}
+  sel.innerHTML=sortAlpha(cat.atividades||[]).map(a=>{const i=getAtv(a.id);return`<option value="${a.id}">${i.nome} (${i.unid})</option>`;}).join('');
+  rLoadUnid();
+};
+window.rLoadUnid=function(){document.getElementById('rUnid').value=getAtv(document.getElementById('rAtv').value).unid;};
+
+window.lancar=async function(){
+  const secId=document.getElementById('rSecao').value,catId=document.getElementById('rCat').value,atvId=document.getElementById('rAtv').value;
+  const qtd=parseFloat(document.getElementById('rQtd').value),data=document.getElementById('rData').value,obs=document.getElementById('rObs').value.trim();
+  if(!secId||!catId||!atvId||isNaN(qtd)||qtd<=0){alert('Preencha todos os campos.');return;}
+  const sec=getSec(secId);const cat=getCat(sec,catId);const atv=(cat?.atividades||[]).find(a=>a.id===atvId);
+  if(atv&&atv.qtdTotal>0&&(execTot(secId,catId,atvId)+qtd>atv.qtdTotal*1.2)&&!confirm('Ultrapassará 120% do previsto. Continuar?'))return;
+  setSS('syncing');
+  try{
+    const payload={secaoId:secId,catId,atvId,qtd,data,obs,usuario:currentUser,ts:serverTimestamp()};
+    if(fotoDataLancar){payload.foto=fotoDataLancar;if(fotoTsLancar)payload.fotoTs=fotoTsLancar;}
+    await addDoc(collection(db,'registros'),payload);
+    document.getElementById('rQtd').value='';document.getElementById('rObs').value='';
+    removerFoto('Lancar');
+    toast('Execução registrada! ✓');setSS('online');
+  }catch(e){
+    if(e.message&&e.message.includes('longer than'))alert('Foto muito grande! Tente uma foto menor ou com menos qualidade.');
+    else alert('Erro: '+e.message);setSS('offline');
+  }
+};
+
+// ── MODAL LANÇAR ──
+window.abrirModal=function(secId,catId,atvId){
+  mCtx={secId,catId,atvId};
+  const sec=getSec(secId);const cat=getCat(sec,catId);const info=getAtv(atvId);const atv=(cat?.atividades||[]).find(a=>a.id===atvId);const ex=execTot(secId,catId,atvId);const ci=catInfo(cat?.tipo);
+  document.getElementById('mlTitle').textContent=info.nome;
+  document.getElementById('mlSub').textContent=`Seção ${sec.cod} · ${ci.icon} ${ci.label} · ${nF(ex)}/${nF(atv?.qtdTotal||0)} ${info.unid}`;
+  document.getElementById('mlUnid').value=info.unid;document.getElementById('mlData').value=hoje();
+  document.getElementById('mlQtd').value='';document.getElementById('mlObs').value='';
+  removerFoto('Modal');
+  document.getElementById('modalLancar').classList.add('open');
+};
+window.confirmarModal=async function(){
+  const qtd=parseFloat(document.getElementById('mlQtd').value),data=document.getElementById('mlData').value,obs=document.getElementById('mlObs').value.trim();
+  if(isNaN(qtd)||qtd<=0){alert('Quantidade inválida.');return;}
+  const{secId,catId,atvId}=mCtx;const sec=getSec(secId);const cat=getCat(sec,catId);const atv=(cat?.atividades||[]).find(a=>a.id===atvId);
+  if(atv&&atv.qtdTotal>0&&(execTot(secId,catId,atvId)+qtd>atv.qtdTotal*1.2)&&!confirm('Ultrapassará 120%. Continuar?'))return;
+  setSS('syncing');
+  try{
+    const payload={secaoId:secId,catId,atvId,qtd,data,obs,usuario:currentUser,ts:serverTimestamp()};
+    if(fotoDataModal){payload.foto=fotoDataModal;if(fotoTsModal)payload.fotoTs=fotoTsModal;}
+    await addDoc(collection(db,'registros'),payload);
+    closeModal('modalLancar');toast('Registrado! ✓');setSS('online');
+    removerFoto('Modal');
+  }catch(e){
+    if(e.message&&e.message.includes('longer than'))alert('Foto muito grande! Tente com menos qualidade.');
+    else alert('Erro: '+e.message);
+  }
+};
+window.closeModal=id=>document.getElementById(id)?.classList.remove('open');
+['modalLancar','modalEditSecao','modalEditAtv','modalEditCat'].forEach(id=>{document.getElementById(id).addEventListener('click',e=>{if(e.target===document.getElementById(id))closeModal(id);});});
+
+// ── HISTÓRICO ──
+function renderHist(){
+  const fSel=document.getElementById('filtSec');const cur=fSel.value;
+  fSel.innerHTML='<option value="">Todas</option>'+secoes.map(s=>`<option value="${s.id}"${s.id===cur?' selected':''}>Seção ${s.cod}</option>`).join('');
+  let list=[...regs];if(fSel.value)list=list.filter(r=>r.secaoId===fSel.value);
+  const el=document.getElementById('histList');
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">🕓</div><div class="empty-text">Sem registros ainda.</div></div>';return;}
+  el.innerHTML=list.map(r=>{
+    const sec=getSec(r.secaoId);const info=getAtv(r.atvId);const cat=getCat(sec,r.catId);const ci=catInfo(cat?.tipo);
+    const fotoTs=r.fotoTs?new Date(r.fotoTs):'';
+    const fotoHtml=r.foto?`<div style="margin-top:8px"><img src="${r.foto}" class="foto-thumb" onclick="verFoto('${r.foto}')" alt="foto">${fotoTs?`<div class="foto-ts-badge" style="margin-top:3px">📅 ${fotoTs.toLocaleDateString('pt-BR')} ${fotoTs.toLocaleTimeString('pt-BR')}</div>`:''}</div>`:'';
+    return`<div class="hist-item"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px"><span class="tag">Seção ${sec?sec.cod:'?'}</span><span class="cat-badge ${ci.cls}" style="font-size:0.6rem;padding:2px 7px">${ci.icon} ${ci.label}</span><span style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--muted)">${fmtD(r.data)}</span></div><div style="font-size:0.78rem;margin-top:5px"><b>${info.nome}</b> — <span style="color:var(--green)">${nF(r.qtd)} ${info.unid}</span></div>${r.usuario?`<div style="font-size:0.62rem;color:var(--blue);margin-top:2px">👷 ${r.usuario}</div>`:''}${r.obs?`<div style="font-size:0.68rem;color:var(--muted);margin-top:2px">💬 ${r.obs}</div>`:''}${fotoHtml}</div>`;
+  }).join('');
+}
+
+// ── RELATÓRIO ──
+function renderRel(){
+  const curSec=document.getElementById('relSec').value;
+  const curCat=document.getElementById('relCat').value;
+  document.getElementById('relSec').innerHTML='<option value="">Todas</option>'+secoes.map(s=>`<option value="${s.id}"${s.id===curSec?' selected':''}>Seção ${s.cod}${s.desc?' — '+s.desc:''}</option>`).join('');
+  // Montar lista de categorias únicas que aparecem nas seções cadastradas
+  const catsUsadas=[];
+  secoes.forEach(s=>(s.categorias||[]).forEach(cat=>{
+    const ci=catInfo(cat.tipo);
+    const label=cat.obs?ci.label+' / '+cat.obs:ci.label;
+    const key=cat.tipo+'|'+cat.id;
+    if(!catsUsadas.find(c=>c.key===key))catsUsadas.push({key,catId:cat.id,tipo:cat.tipo,label,icon:ci.icon});
+  }));
+  catsUsadas.sort((a,b)=>a.label.localeCompare(b.label,'pt-BR',{sensitivity:'base'}));
+  document.getElementById('relCat').innerHTML='<option value="">Todas</option>'+catsUsadas.map(c=>`<option value="${c.catId}"${c.catId===curCat?' selected':''}>${c.icon} ${c.label}</option>`).join('');
+  gerarPrevia();
+}
+function filtrarRegs(){
+  const sId=document.getElementById('relSec').value,cId=document.getElementById('relCat').value,dI=document.getElementById('relDI').value,dF=document.getElementById('relDF').value;
+  return regs.filter(r=>{
+    if(sId&&r.secaoId!==sId)return false;
+    if(cId&&r.catId!==cId)return false;
+    if(dI&&r.data<dI)return false;if(dF&&r.data>dF)return false;return true;
+  });
+}
+function montarRows(){
+  const rFilt=filtrarRegs();const sId=document.getElementById('relSec')?.value;const rows=[];
+  (sId?secoes.filter(s=>s.id===sId):secoes).forEach(s=>{
+    const cId=document.getElementById('relCat')?.value;
+    (cId?(s.categorias||[]).filter(c=>c.id===cId):s.categorias||[]).forEach(cat=>{
+      const ci=catInfo(cat.tipo);
+      (cat.atividades||[]).forEach(a=>{const info=getAtv(a.id);const ex=rFilt.filter(r=>r.secaoId===s.id&&r.catId===cat.id&&r.atvId===a.id).reduce((acc,r)=>acc+r.qtd,0);rows.push({secao:'Seção '+s.cod,descSec:s.desc||'',categoria:ci.label,catObs:cat.obs||'',atividade:info.nome,unid:info.unid,prev:a.qtdTotal||0,exec:ex,saldo:(a.qtdTotal||0)-ex,pct:pct(ex,a.qtdTotal||0)});});
+    });
+  });
+  return rows;
+}
+function gerarPrevia(){
+  const rows=montarRows();const el=document.getElementById('relPrevia');
+  if(!rows.length){el.innerHTML='<div style="color:var(--muted);font-size:0.78rem">Sem dados.</div>';return;}
+  el.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.68rem"><thead><tr style="background:var(--surface2)">${['Seção','Categoria','Atividade','Prev.','Exec.','%'].map(h=>`<th style="padding:5px 6px;text-align:left;border-bottom:1px solid var(--border);color:var(--muted)">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>{const cor=r.pct>=100?'var(--green)':r.pct>=50?'var(--accent)':'var(--blue)';return`<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 6px;font-weight:700">${r.secao}</td><td style="padding:5px 6px">${r.categoria}${r.catObs?' ('+r.catObs+')':''}</td><td style="padding:5px 6px">${r.atividade}</td><td style="padding:5px 4px;font-family:'DM Mono',monospace">${nF(r.prev)} ${r.unid}</td><td style="padding:5px 4px;font-family:'DM Mono',monospace;color:var(--green)">${nF(r.exec)} ${r.unid}</td><td style="padding:5px 4px;font-family:'DM Mono',monospace;color:${cor}">${r.pct}%</td></tr>`;}).join('')}</tbody></table></div>`;
+}
+
+window.exportExcel=function(){
+  const rows=montarRows();if(!rows.length){alert('Sem dados.');return;}
+  const rFilt=filtrarRegs().sort((a,b)=>(a.data||'').localeCompare(b.data||''));
+  const wb=XLSX.utils.book_new();
+  const ws1=XLSX.utils.aoa_to_sheet([['RELATÓRIO — '+cfg.nome],['Responsável:',cfg.resp||''],['Contrato:',cfg.contrato||''],['Emitido:',fmtD(hoje())],[],['Seção','Desc.','Categoria','Obs.','Atividade','Unid.','Previsto','Executado','Saldo','%'],...rows.map(r=>[r.secao,r.descSec,r.categoria,r.catObs,r.atividade,r.unid,r.prev,r.exec,r.saldo,r.pct+'%'])]);
+  ws1['!cols']=[{wch:10},{wch:20},{wch:16},{wch:16},{wch:28},{wch:7},{wch:11},{wch:11},{wch:10},{wch:8}];XLSX.utils.book_append_sheet(wb,ws1,'Resumo');
+  const ws2=XLSX.utils.aoa_to_sheet([['HISTÓRICO'],[],['Data','Seção','Categoria','Atividade','Qtd.','Unid.','Usuário','Observações','Foto?'],...rFilt.map(r=>{const sec=getSec(r.secaoId);const cat=getCat(sec,r.catId);const ci=catInfo(cat?.tipo);const info=getAtv(r.atvId);return[fmtD(r.data),sec?'Seção '+sec.cod:'?',ci.label,info.nome,r.qtd,info.unid,r.usuario||'',r.obs||'',r.foto?'Sim':'Não'];})]);
+  ws2['!cols']=[{wch:12},{wch:10},{wch:16},{wch:28},{wch:10},{wch:7},{wch:14},{wch:36},{wch:6}];XLSX.utils.book_append_sheet(wb,ws2,'Histórico');
+  XLSX.writeFile(wb,`InfraLog_${(cfg.nome||'Obra').replace(/\s/g,'_')}_${hoje()}.xlsx`);toast('Excel gerado! ✓');
+};
+
+window.exportPDF=function(){
+  const rows=montarRows();if(!rows.length){alert('Sem dados.');return;}
+  const rFilt=filtrarRegs().sort((a,b)=>(a.data||'').localeCompare(b.data||''));
+  let tG=0,eG=0;secoes.forEach(s=>(s.categorias||[]).forEach(cat=>(cat.atividades||[]).forEach(a=>{tG+=a.qtdTotal||0;eG+=execTot(s.id,cat.id,a.id);})));
+  const byCat={};secoes.forEach(s=>(s.categorias||[]).forEach(cat=>{const tipo=cat.tipo;if(!byCat[tipo])byCat[tipo]={label:catInfo(tipo).label,tot:0,exec:0};(cat.atividades||[]).forEach(a=>{byCat[tipo].tot+=a.qtdTotal||0;byCat[tipo].exec+=execTot(s.id,cat.id,a.id);});}));
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:10.5px;color:#0a1020;}.hd{background:#0a1020;color:#fff;padding:18px 22px;}.hd h1{font-size:18px;color:#00d4ff;font-weight:900;margin-bottom:3px;}.hd .sub{font-size:9.5px;color:#6b8aa0;}.pg{padding:16px 22px;}.meta{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:14px;}.mb{background:#f0f4f8;border-radius:5px;padding:9px 11px;border-left:3px solid #00d4ff;}.mb .l{font-size:8px;color:#888;text-transform:uppercase;}.mb .v{font-size:14px;font-weight:800;margin-top:2px;}h2{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#555;border-bottom:2px solid #00d4ff;padding-bottom:4px;margin:14px 0 9px;}table{width:100%;border-collapse:collapse;font-size:9.5px;margin-bottom:5px;}th{background:#0a1020;color:#fff;padding:6px 7px;text-align:left;font-size:8.5px;}td{padding:5px 7px;border-bottom:1px solid #e8eef4;}tr:nth-child(even) td{background:#f8fafc;}.badge{display:inline-block;background:#00d4ff;color:#000;font-weight:800;border-radius:4px;padding:1px 6px;font-size:8px;}.ft{margin-top:14px;padding:9px 22px;background:#f0f4f8;font-size:8px;color:#888;text-align:center;border-top:1px solid #dde4ed;}.foto-pdf{width:80px;height:60px;object-fit:cover;border-radius:4px;vertical-align:middle;}@media print{@page{margin:10mm;}}</style></head><body>
+<div class="hd"><h1>InfraLog — Relatório de Avanço</h1><div style="font-size:14px;color:#ccc;font-weight:700;margin-bottom:4px">${cfg.nome||'Obra'}</div><div class="sub">${cfg.contrato?'Contrato: '+cfg.contrato+' · ':''}Responsável: ${cfg.resp||'—'} · Emitido: ${fmtD(hoje())}</div></div>
+<div class="pg"><div class="meta"><div class="mb"><div class="l">Avanço Geral</div><div class="v" style="color:#0099cc">${pct(eG,tG)}%</div></div><div class="mb"><div class="l">Seções</div><div class="v">${secoes.length}</div></div><div class="mb"><div class="l">Lançamentos</div><div class="v">${regs.length}</div></div><div class="mb"><div class="l">Data</div><div class="v" style="font-size:10px">${fmtD(hoje())}</div></div></div>
+<h2>Por Categoria</h2><table><thead><tr><th>Categoria</th><th>Previsto</th><th>Executado</th><th>%</th></tr></thead><tbody>${Object.entries(byCat).filter(([,v])=>v.tot>0).map(([tipo,v])=>{const p=pct(v.exec,v.tot);const cor=p>=100?'#16a34a':p>=50?'#d97706':'#2563eb';return`<tr><td><b>${v.label}</b></td><td>${nF(v.tot)}</td><td style="color:#16a34a;font-weight:700">${nF(v.exec)}</td><td style="color:${cor};font-weight:700">${p}%</td></tr>`;}).join('')}</tbody></table>
+<h2>Detalhamento Seção / Categoria / Atividade</h2><table><thead><tr><th>Seção</th><th>Categoria</th><th>Atividade</th><th>Unid.</th><th>Previsto</th><th>Executado</th><th>Saldo</th><th>%</th></tr></thead><tbody>${rows.map(r=>{const cor=r.pct>=100?'#16a34a':r.pct>=50?'#d97706':'#2563eb';return`<tr><td><span class="badge">${r.secao.replace('Seção ','')}</span></td><td>${r.categoria}${r.catObs?' ('+r.catObs+')':''}</td><td>${r.atividade}</td><td>${r.unid}</td><td>${nF(r.prev)}</td><td style="color:#16a34a;font-weight:700">${nF(r.exec)}</td><td>${nF(r.saldo)}</td><td style="color:${cor};font-weight:700">${r.pct}%</td></tr>`;}).join('')}</tbody></table>
+<h2>Histórico com Fotos (${rFilt.length} lançamentos)</h2><table><thead><tr><th>Data</th><th>Seção</th><th>Categoria</th><th>Atividade</th><th>Qtd.</th><th>Usuário</th><th>Obs.</th><th>Foto</th></tr></thead><tbody>${rFilt.map(r=>{const sec=getSec(r.secaoId);const cat=getCat(sec,r.catId);const ci=catInfo(cat?.tipo);const info=getAtv(r.atvId);return`<tr><td>${fmtD(r.data)}</td><td>${sec?'Seção '+sec.cod:'?'}</td><td>${ci.label}</td><td>${info.nome}</td><td style="font-weight:700">${nF(r.qtd)} ${info.unid}</td><td style="color:#2563eb">${r.usuario||'—'}</td><td style="color:#888">${r.obs||'—'}</td><td>${r.foto?`<img src="${r.foto}" class="foto-pdf">`:'-'}</td></tr>`;}).join('')}</tbody></table>
+</div><div class="ft">InfraLog · ${cfg.nome||''} · ${cfg.resp||''} · ${new Date().toLocaleString('pt-BR')}</div></body></html>`;
+  const blob=new Blob([html],{type:'text/html'});const url=URL.createObjectURL(blob);
+  const w=window.open(url,'_blank');if(w)setTimeout(()=>w.print(),800);
+  else{const a=document.createElement('a');a.href=url;a.download=`InfraLog_${hoje()}.html`;a.click();}
+  toast('PDF aberto — Imprimir → Salvar como PDF ✓');
+};
+
+// ── CONFIG: ATIVIDADES (padrão + extra, todas editáveis) ──
+window.selUnid=function(el,u){document.querySelectorAll('#unidChips .chip').forEach(c=>c.classList.remove('selected'));el.classList.add('selected');unidSel=u;document.getElementById('nsUnid').value=u;};
+window.addAtividade=async function(){
+  const nome=document.getElementById('nsNome').value.trim(),unid=(document.getElementById('nsUnid').value.trim()||unidSel).trim();
+  if(!nome){alert('Informe o nome.');return;}if(!unid){alert('Informe a unidade.');return;}
+  setSS('syncing');
+  try{await addDoc(collection(db,'atividades'),{id:'cx_'+Date.now(),nome,unid});document.getElementById('nsNome').value='';document.getElementById('nsUnid').value='';unidSel='';document.querySelectorAll('#unidChips .chip').forEach(c=>c.classList.remove('selected'));toast('Atividade adicionada! ✓');setSS('online');}
+  catch(e){alert('Erro: '+e.message);}
+};
+window.delAtividade=async function(docId){if(!confirm('Remover atividade personalizada?'))return;await deleteDoc(doc(db,'atividades',docId));toast('Removida.');};
+
+// ── EDITAR ATIVIDADE (padrão via override, extra via update) ──
+window.abrirEditAtv=function(atvId){
+  const atv=getAtv(atvId);
+  editAtvCtx={id:atvId,isPad:ATV_PAD.some(a=>a.id===atvId),extDoc:atvExt.find(a=>a.id===atvId)};
+  document.getElementById('editAtvSub').textContent=editAtvCtx.isPad?'Atividade padrão':'Atividade personalizada';
+  document.getElementById('editAtvNome').value=atv.nome;
+  document.getElementById('editAtvUnid').value=atv.unid;
+  document.getElementById('modalEditAtv').classList.add('open');
+};
+window.salvarEdicaoAtv=async function(){
+  if(!editAtvCtx)return;
+  const nome=document.getElementById('editAtvNome').value.trim(),unid=document.getElementById('editAtvUnid').value.trim();
+  if(!nome||!unid){alert('Preencha todos os campos.');return;}
+  setSS('syncing');
+  try{
+    if(editAtvCtx.isPad){
+      // Salva override no Firestore usando o ID da atividade como doc ID
+      await setDoc(doc(db,'atvOverrides',editAtvCtx.id),{nome,unid});
+    } else {
+      await updateDoc(doc(db,'atividades',editAtvCtx.extDoc._docId),{nome,unid});
+    }
+    closeModal('modalEditAtv');toast('Atividade atualizada! ✓');setSS('online');
+  }catch(e){alert('Erro: '+e.message);}
+};
+
+function renderListaAtv(){
+  document.getElementById('listaAtividades').innerHTML=todasAtv().map(a=>{
+    const isExt=atvExt.find(x=>x.id===a.id);
+    const isOverridden=!isExt&&atvOverrides[a.id];
+    return`<div class="atv-edit-row">
+      <div style="flex:1"><span style="font-size:0.78rem;font-weight:600">${a.nome}</span><span class="tag">${a.unid}</span>${isExt?'<span style="font-size:0.58rem;color:var(--accent);margin-left:4px">✦ sua</span>':isOverridden?'<span style="font-size:0.58rem;color:var(--orange);margin-left:4px">✎ editada</span>':'<span style="font-size:0.58rem;color:var(--muted);margin-left:4px">padrão</span>'}</div>
+      <div style="display:flex;gap:5px">
+        <button class="btn-sm-accent" onclick="abrirEditAtv('${a.id}')">✏️</button>
+        ${isExt?`<button class="btn-sm-danger" onclick="delAtividade('${isExt._docId}')">🗑</button>`:''}
+        ${isOverridden?`<button class="btn-sm-danger" onclick="resetAtvPadrao('${a.id}')" title="Restaurar padrão">↩</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+window.resetAtvPadrao=async function(id){
+  if(!confirm('Restaurar nome e unidade originais desta atividade?'))return;
+  await deleteDoc(doc(db,'atvOverrides',id));toast('Restaurado! ✓');
+};
+
+// ── CONFIG: SEÇÕES ──
+window.addCatEntry=function(){
+  const id='ce_'+Date.now();const div=document.createElement('div');div.className='cat-entry';div.id=id;
+  const catChips=todasCat().map(c=>`<div class="chip" data-tipo="${c.tipo}" onclick="selCat(this,'${id}')">${c.icon} ${c.label}</div>`).join('');
+  div.innerHTML=`<div class="cat-entry-header"><span style="font-size:0.78rem;font-weight:700;color:var(--accent)">Categoria</span><button class="btn-danger" style="margin-left:auto" onclick="document.getElementById('${id}').remove()">✕</button></div>
+    <div class="form-group"><label class="form-label">Tipo</label><div class="chip-select">${catChips}</div></div>
+    <div class="form-group" id="obsBox_${id}" style="display:none"><label class="form-label">Observação / Nome específico</label><input type="text" id="obs_${id}" placeholder="Ex: Passeio, Ciclovia, Contenção..."></div>
+    <div class="form-group"><label class="form-label">Atividades desta Categoria</label><div class="chip-select" id="atvChips_${id}">${todasAtv().map(a=>`<div class="chip" data-atvid="${a._docId||a.id}" onclick="togAtvChip(this,'${id}')">${a.nome}</div>`).join('')}</div></div>
+    <div id="qtdBox_${id}"></div>`;
+  document.getElementById('catEntries').appendChild(div);
+};
+window.selCat=function(el,id){el.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));el.classList.add('selected');document.getElementById('obsBox_'+id).style.display='block';};
+window.togAtvChip=function(el,id){
+  el.classList.toggle('selected');
+  const sel=[...document.querySelectorAll(`#atvChips_${id} .chip.selected`)];
+  const box=document.getElementById('qtdBox_'+id);
+  if(!sel.length){box.innerHTML='';return;}
+  const existing={};box.querySelectorAll('input[type=number]').forEach(inp=>{existing[inp.id]=inp.value;});
+  box.innerHTML='<div class="divider">Quantidades Previstas</div>'+sel.map(chip=>{const a=getAtv(chip.dataset.atvid);const key=`qtd_${id}_${a.id}`;return`<div class="form-group"><label class="form-label">${a.nome} (${a.unid})</label><input type="number" id="${key}" placeholder="0" min="0" step="0.01" value="${existing[key]||''}"></div>`;}).join('');
+};
+window.salvarSecao=async function(){
+  const cod=document.getElementById('sCod').value.trim().toUpperCase(),desc=document.getElementById('sDesc').value.trim();
+  if(!cod){alert('Informe o código.');return;}if(secoes.find(s=>s.cod===cod)){alert('Seção '+cod+' já existe.');return;}
+  const entries=[...document.querySelectorAll('#catEntries .cat-entry')];
+  if(!entries.length){alert('Adicione ao menos uma categoria.');return;}
+  const categorias=[];
+  for(const entry of entries){
+    const tipoChip=entry.querySelector('.chip.selected[data-tipo]');if(!tipoChip){alert('Selecione o tipo de cada categoria.');return;}
+    const tipo=tipoChip.dataset.tipo,obs=entry.querySelector('[id^="obs_"]')?.value.trim()||'';
+    const atvSel=[...entry.querySelectorAll('.chip.selected[data-atvid]')];if(!atvSel.length){alert('Selecione ao menos uma atividade.');return;}
+    const atividades=atvSel.map(chip=>{const id2=chip.dataset.atvid;const qtd=parseFloat(entry.querySelector(`#qtd_${entry.id}_${id2}`)?.value)||0;return{id:id2,qtdTotal:qtd};});
+    categorias.push({id:'cat_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),tipo,obs,atividades});
+  }
+  setSS('syncing');
+  try{await addDoc(collection(db,'secoes'),{cod,desc,categorias,criadoPor:currentUser,ts:serverTimestamp()});document.getElementById('sCod').value='';document.getElementById('sDesc').value='';document.getElementById('catEntries').innerHTML='';toast('Seção '+cod+' cadastrada! ✓');setSS('online');}
+  catch(e){alert('Erro: '+e.message);}
+};
+
+// ── EDITAR SEÇÃO ──
+// Renderiza o bloco de uma categoria dentro do modal de edição
+function renderEditCatBlock(cat,isNew){
+  const ci=catInfo(cat.tipo);
+  const label=cat.tipo==='custom'&&cat.obs?cat.obs:cat.obs?ci.label+' / '+cat.obs:ci.label;
+  const blockId='ecb_'+cat.id;
+  // Atividades já salvas na categoria
+  const atvRows=sortAlpha(cat.atividades||[]).map(a=>{
+    const info=getAtv(a.id);
+    const canonId=info.id||a.id;
+    return`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1;font-size:0.76rem">${info.nome} <span class="tag">${info.unid}</span></div>
+      <input type="number" id="eq_${cat.id}_${canonId}" data-atvid="${canonId}" value="${a.qtdTotal||0}" min="0" step="0.01" style="max-width:90px;padding:6px 8px;font-size:0.82rem">
+      <button onclick="remAtvEdit('${blockId}','${canonId}')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.9rem;padding:0 4px">✕</button>
+    </div>`;
+  }).join('');
+  // Observação editável
+  const obsVal=cat.obs||'';
+  return`<div id="${blockId}" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span class="cat-badge ${ci.cls}">${ci.icon} ${label}</span>
+      <button onclick="document.getElementById('${blockId}').remove()" style="margin-left:auto;background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.9rem">✕</button>
+    </div>
+    <div class="form-group" style="margin-bottom:8px">
+      <label class="form-label">Observação (opcional)</label>
+      <input type="text" id="eobs_${cat.id}" value="${obsVal}" placeholder="Ex: Passeio, Ciclovia...">
+    </div>
+    <div class="divider">Atividades e Quantidades Previstas</div>
+    <div id="eatvrows_${cat.id}">${atvRows}</div>
+    <div style="margin-top:8px">
+      <select id="enovaatv_${cat.id}" style="margin-bottom:6px">
+        <option value="">— Selecionar atividade para adicionar —</option>
+        ${todasAtv().filter(a=>!(cat.atividades||[]).some(ca=>ca.id===(a._docId||a.id))).map(a=>`<option value="${a._docId||a.id}">${a.nome} (${a.unid})</option>`).join('')}
+      </select>
+      <button class="btn-sm-accent" onclick="addAtvEdit('${blockId}','${cat.id}')" style="width:100%">+ Adicionar Atividade</button>
+    </div>
+  </div>`;
+}
+
+window.addAtvEdit=function(blockId,catId){
+  const sel=document.getElementById('enovaatv_'+catId);
+  const atvId=sel.value;
+  if(!atvId)return;
+  const info=getAtv(atvId);
+  const rows=document.getElementById('eatvrows_'+catId);
+  // Checar se já existe
+  if(document.getElementById('eq_'+catId+'_'+atvId)){toast('Atividade já adicionada.');return;}
+  const div=document.createElement('div');
+  div.id='editrow_'+catId+'_'+atvId;
+  div.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)';
+  div.innerHTML=`<div style="flex:1;font-size:0.76rem">${info.nome} <span class="tag">${info.unid}</span></div>
+    <input type="number" id="eq_${catId}_${atvId}" data-atvid="${atvId}" value="0" min="0" step="0.01" style="max-width:90px;padding:6px 8px;font-size:0.82rem">
+    <button onclick="remAtvEdit('${blockId}','${atvId}')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.9rem;padding:0 4px">✕</button>`;
+  rows.appendChild(div);
+  // Remover do select
+  sel.querySelector(`option[value="${atvId}"]`)?.remove();
+};
+
+window.remAtvEdit=function(blockId,atvId){
+  // Remover a linha
+  const row=document.getElementById('editrow_'+blockId.replace('ecb_','')+'_'+atvId)||
+             document.querySelector(`[id="eatvrows_${blockId.replace('ecb_','')}"] div`);
+  // Usar catId do blockId
+  const catId=blockId.replace('ecb_','');
+  const rowEl=document.getElementById('editrow_'+catId+'_'+atvId);
+  const inp=document.getElementById('eq_'+catId+'_'+atvId);
+  if(rowEl)rowEl.remove();
+  else if(inp)inp.closest('div[style*="display:flex"]')?.remove();
+  // Readicionar ao select
+  const sel=document.getElementById('enovaatv_'+catId);
+  if(sel){const info=getAtv(atvId);const opt=document.createElement('option');opt.value=atvId;opt.textContent=info.nome+' ('+info.unid+')';sel.appendChild(opt);}
+};
+
+// Adicionar nova entrada de categoria no modal de edição
+window.addEditCatEntry=function(){
+  const el=document.getElementById('editCatList');
+  const id='new_'+Date.now();
+  const catChips=todasCat().map(c=>`<div class="chip" data-tipo="${c.tipo}" onclick="selEditCatChip(this,'${id}')">${c.icon} ${c.label}</div>`).join('');
+  const atvChips=todasAtv().map(a=>`<div class="chip" data-atvid="${a._docId||a.id}" onclick="togEditAtvChip(this,'${id}')">${a.nome}</div>`).join('');
+  const div=document.createElement('div');
+  div.id='ecb_'+id;
+  div.style.cssText='background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px';
+  div.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+    <span style="font-size:0.78rem;font-weight:700;color:var(--accent)">Nova Categoria</span>
+    <button onclick="document.getElementById('ecb_${id}').remove()" style="margin-left:auto;background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.9rem">✕</button>
+  </div>
+  <div class="form-group"><label class="form-label">Tipo</label><div class="chip-select" id="eccat_${id}">${catChips}</div></div>
+  <div class="form-group" style="display:none" id="ecobs_wrap_${id}"><label class="form-label">Observação (opcional)</label><input type="text" id="ecobs_${id}" placeholder="Ex: Passeio, Ciclovia..."></div>
+  <div class="form-group"><label class="form-label">Atividades</label><div class="chip-select" id="ecatv_${id}">${atvChips}</div></div>
+  <div id="ecqtd_${id}"></div>`;
+  el.appendChild(div);
+};
+
+window.selEditCatChip=function(el,id){
+  el.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('ecobs_wrap_'+id).style.display='block';
+};
+window.togEditAtvChip=function(el,id){
+  el.classList.toggle('selected');
+  const sel=[...document.querySelectorAll('#ecatv_'+id+' .chip.selected')];
+  const box=document.getElementById('ecqtd_'+id);
+  const existing={};box.querySelectorAll('input[type=number]').forEach(inp=>{existing[inp.id]=inp.value;});
+  box.innerHTML=sel.length?'<div class="divider">Quantidades</div>'+sel.map(chip=>{const a=getAtv(chip.dataset.atvid);const key=`ecq_${id}_${a.id}`;return`<div class="form-group"><label class="form-label">${a.nome} (${a.unid})</label><input type="number" id="${key}" value="${existing[key]||''}" placeholder="0" min="0" step="0.01"></div>`;}).join(''):'';
+};
+
+window.abrirEditSecao=function(secId){
+  const sec=getSec(secId);if(!sec)return;
+  editSecCtx=sec;
+  document.getElementById('editSecSub').textContent='Seção '+sec.cod;
+  document.getElementById('editSecCod').value=sec.cod;
+  document.getElementById('editSecDesc').value=sec.desc||'';
+  const el=document.getElementById('editCatList');
+  el.innerHTML=(sec.categorias||[]).map(cat=>renderEditCatBlock(cat,false)).join('');
+  document.getElementById('modalEditSecao').classList.add('open');
+};
+
+window.salvarEdicaoSecao=async function(){
+  if(!editSecCtx)return;
+  const novoCod=document.getElementById('editSecCod').value.trim().toUpperCase();
+  const novoDesc=document.getElementById('editSecDesc').value.trim();
+  if(!novoCod){alert('Informe o código.');return;}
+  if(secoes.find(s=>s.cod===novoCod&&s.id!==editSecCtx.id)){alert('Seção '+novoCod+' já existe.');return;}
+
+  const novasCats=[];
+
+  // Categorias existentes (editadas)
+  (editSecCtx.categorias||[]).forEach(cat=>{
+    const blockId='ecb_'+cat.id;
+    if(!document.getElementById(blockId))return; // foi removida pelo usuário
+    const obs=document.getElementById('eobs_'+cat.id)?.value.trim()||cat.obs||'';
+    // Pegar todas as atividades visíveis no bloco
+    const atividades=[];
+    const container=document.getElementById('eatvrows_'+cat.id);
+    if(container){
+      container.querySelectorAll('input[type=number]').forEach(inp=>{
+        const atvId=inp.dataset.atvid||inp.id.replace('eq_'+cat.id+'_','');
+        const qtd=parseFloat(inp.value)||0;
+        if(atvId&&!atividades.some(a=>a.id===atvId))atividades.push({id:atvId,qtdTotal:qtd});
+      });
+    }
+    novasCats.push({...cat,obs,atividades});
+  });
+
+  // Categorias novas adicionadas no modal
+  document.querySelectorAll('[id^="ecb_new_"]').forEach(block=>{
+    const id=block.id.replace('ecb_','');
+    const tipoChip=block.querySelector('.chip.selected[data-tipo]');
+    if(!tipoChip)return;
+    const tipo=tipoChip.dataset.tipo;
+    const obs=document.getElementById('ecobs_'+id)?.value.trim()||'';
+    const atvSel=[...block.querySelectorAll('.chip.selected[data-atvid]')];
+    if(!atvSel.length)return;
+    const atividades=atvSel.map(chip=>{const a=getAtv(chip.dataset.atvid);const qtd=parseFloat(document.getElementById('ecq_'+id+'_'+a.id)?.value)||0;return{id:a.id,qtdTotal:qtd};});
+    novasCats.push({id:'cat_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),tipo,obs,atividades});
+  });
+
+  if(!novasCats.length){alert('A seção precisa ter ao menos uma categoria.');return;}
+  setSS('syncing');
+  try{
+    await updateDoc(doc(db,'secoes',editSecCtx.id),{cod:novoCod,desc:novoDesc,categorias:novasCats});
+    closeModal('modalEditSecao');renderSecoes();toast('Seção atualizada! ✓');setSS('online');
+  }catch(e){alert('Erro: '+e.message);}
+};
+
+function renderCfgSecList(){
+  const el=document.getElementById('cfgSecList');
+  if(!secoes.length){el.innerHTML='<div style="color:var(--muted);font-size:0.78rem">Nenhuma seção ainda.</div>';return;}
+  el.innerHTML=secoes.map(s=>`<div style="display:flex;align-items:flex-start;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)"><div class="secao-cod" style="font-size:0.72rem">${s.cod}</div><div style="flex:1"><div style="font-size:0.8rem;font-weight:600">${s.desc||'—'}</div><div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px">${(s.categorias||[]).map(c=>{const ci=catInfo(c.tipo);return`<span class="cat-badge ${ci.cls}" style="font-size:0.6rem;padding:2px 7px">${ci.icon} ${c.tipo==='custom'&&c.obs?c.obs:c.obs?ci.label+'/'+c.obs:ci.label}</span>`;}).join('')}</div><div style="font-size:0.6rem;color:var(--muted);margin-top:3px">${(s.categorias||[]).length} categoria(s) · ${(s.categorias||[]).reduce((a,c)=>a+(c.atividades||[]).length,0)} atividade(s)</div></div><button class="btn-sm-danger" onclick="delSecao('${s.id}')">🗑</button></div>`).join('');
+}
+window.delSecao=async function(id){if(!confirm('Remover seção?'))return;setSS('syncing');await deleteDoc(doc(db,'secoes',id));setSS('online');toast('Seção removida.');};
+window.salvarCfg=async function(){
+  const nome=document.getElementById('cNome').value.trim()||'Minha Obra',resp=document.getElementById('cResp').value.trim(),contrato=document.getElementById('cContrato').value.trim();
+  setSS('syncing');
+  try{await setDoc(doc(db,'obra','config'),{nome,resp,contrato});toast('Configurações salvas! ✓');setSS('online');}
+  catch(e){alert('Erro: '+e.message);}
+};
+window.resetTudo=async function(){
+  if(!confirm('Apagar TODOS os registros?'))return;if(!confirm('Confirmar? Não tem volta.'))return;
+  setSS('syncing');
+  const snap=await getDocs(collection(db,'registros'));const batch=writeBatch(db);snap.docs.forEach(d=>batch.delete(d.ref));await batch.commit();
+  toast('Registros apagados. ✓');setSS('online');
+};
+function renderCfg(){
+  document.getElementById('cNome').value=cfg.nome||'';document.getElementById('cResp').value=cfg.resp||'';document.getElementById('cContrato').value=cfg.contrato||'';
+  unidSel='';iconSel='';iconSelEdit='';
+  document.querySelectorAll('#unidChips .chip').forEach(c=>c.classList.remove('selected'));
+  document.querySelectorAll('#iconChips .chip').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('nsNome').value='';document.getElementById('nsUnid').value='';
+  if(document.getElementById('ncNome'))document.getElementById('ncNome').value='';
+  renderListaAtv();renderListaCat();
+  document.getElementById('sCod').value='';document.getElementById('sDesc').value='';document.getElementById('catEntries').innerHTML='';
+  renderCfgSecList();
+}
+
+// ── CATEGORIAS: listar, adicionar, editar, excluir ──
+function renderListaCat(){
+  const el=document.getElementById('listaCategorias');
+  if(!el)return;
+  const todas=todasCat();
+  if(!todas.length){el.innerHTML='<div style="color:var(--muted);font-size:0.78rem;padding:8px 0">Nenhuma categoria cadastrada ainda.</div>';return;}
+  el.innerHTML=todas.map(c=>{
+    const isExt=catExt.find(x=>x.tipo===c.tipo);
+    const isPad=CAT_PAD.some(p=>p.tipo===c.tipo);
+    return`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:1.1rem">${c.icon}</span>
+      <div style="flex:1">
+        <span style="font-size:0.8rem;font-weight:600">${c.label}</span>
+        ${isPad?'<span style="font-size:0.58rem;color:var(--muted);margin-left:6px">padrão</span>':'<span style="font-size:0.58rem;color:var(--accent);margin-left:6px">✦ personalizada</span>'}
+      </div>
+      <div style="display:flex;gap:5px">
+        <button class="btn-sm-accent" onclick="abrirEditCat('${c.tipo}')">✏️</button>
+        ${isExt?`<button class="btn-sm-danger" onclick="delCategoria('${isExt._docId}')">🗑</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.selIcon=function(el,icon){
+  document.querySelectorAll('#iconChips .chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');iconSel=icon;
+};
+window.selIconEdit=function(el,icon){
+  document.querySelectorAll('#editIconChips .chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');iconSelEdit=icon;
+};
+
+window.addCategoria=async function(){
+  const nome=document.getElementById('ncNome').value.trim();
+  const icon=iconSel||'⚙️';
+  if(!nome){alert('Informe o nome da categoria.');return;}
+  const tipo='cat_'+Date.now();
+  setSS('syncing');
+  try{
+    await addDoc(collection(db,'categorias'),{tipo,label:nome,icon,cls:'cat-custom'});
+    document.getElementById('ncNome').value='';
+    iconSel='';
+    document.querySelectorAll('#iconChips .chip').forEach(c=>c.classList.remove('selected'));
+    toast('Categoria "'+nome+'" criada! ✓');setSS('online');
+  }catch(e){alert('Erro: '+e.message);setSS('offline');}
+};
+
+let editCatCtx=null;
+window.abrirEditCat=function(tipo){
+  const c=catInfo(tipo);
+  const isExt=catExt.find(x=>x.tipo===tipo);
+  editCatCtx={tipo,isExt};
+  document.getElementById('editCatSub').textContent=isExt?'Categoria personalizada':'Categoria padrão';
+  document.getElementById('editCatNome').value=c.label;
+  iconSelEdit=c.icon;
+  document.querySelectorAll('#editIconChips .chip').forEach(ch=>{
+    ch.classList.toggle('selected',ch.textContent.trim()===c.icon);
+  });
+  document.getElementById('modalEditCat').classList.add('open');
+};
+
+window.salvarEdicaoCat=async function(){
+  if(!editCatCtx)return;
+  const label=document.getElementById('editCatNome').value.trim();
+  const icon=iconSelEdit||'⚙️';
+  if(!label){alert('Informe o nome.');return;}
+  setSS('syncing');
+  try{
+    if(editCatCtx.isExt){
+      // Atualiza categoria personalizada
+      await updateDoc(doc(db,'categorias',editCatCtx.isExt._docId),{label,icon});
+    } else {
+      // Para padrão: salva como nova entrada no Firebase com mesmo tipo
+      const existing=catExt.find(c=>c.tipo===editCatCtx.tipo);
+      if(existing){
+        await updateDoc(doc(db,'categorias',existing._docId),{label,icon});
+      } else {
+        await addDoc(collection(db,'categorias'),{tipo:editCatCtx.tipo,label,icon,cls:'cat-custom'});
+      }
+    }
+    closeModal('modalEditCat');toast('Categoria atualizada! ✓');setSS('online');
+  }catch(e){alert('Erro: '+e.message);}
+};
+
+window.delCategoria=async function(docId){
+  if(!confirm('Remover esta categoria personalizada?'))return;
+  setSS('syncing');
+  await deleteDoc(doc(db,'categorias',docId));
+  setSS('online');toast('Categoria removida.');
+};
+
+window.toast=function(msg){const t=document.createElement('div');t.style.cssText='position:fixed;bottom:94px;left:50%;transform:translateX(-50%);background:#4ade80;color:#000;font-weight:700;padding:11px 22px;border-radius:30px;font-size:0.82rem;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:fadeUp .3s ease;white-space:nowrap';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500);};
+</script>
+</body>
+</html>
