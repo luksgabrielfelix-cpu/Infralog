@@ -573,6 +573,21 @@ let atvExt=[];        // atividades totalmente novas
 let catExt=[];        // categorias personalizadas
 let secoes=[],regs=[],mCtx=null,unidSel='',currentUser='',editSecCtx=null,editAtvCtx=null;
 let fotoDataLancar=null,fotoDataModal=null;
+
+// ── INIT IMEDIATO: esconde loading e configura usuário sem esperar Firebase ──
+{
+  clearTimeout(window._ilSafety);
+  const _sv=localStorage.getItem('ilUser');
+  document.getElementById('loadingScreen').classList.add('hidden');
+  if(_sv){
+    currentUser=_sv;
+    document.getElementById('userLabel').textContent='👷 '+_sv;
+    document.getElementById('appShell').style.display='block';
+    document.getElementById('modalUser').classList.remove('open');
+  } else {
+    document.getElementById('modalUser').classList.add('open');
+  }
+}
 const sortAlpha=(arr,key='nome')=>arr.slice().sort((a,b)=>(a[key]||'').localeCompare(b[key]||'','pt-BR',{sensitivity:'base'}));
 
 // ── ATIVIDADES: mescla padrão + overrides + extras ──
@@ -753,13 +768,10 @@ window.confirmarUsuario=function(){
   document.getElementById('modalUser').classList.remove('open');
   document.getElementById('userLabel').textContent='👷 '+nome;
   document.getElementById('appShell').style.display='block';
-  document.getElementById('loadingScreen').classList.add('hidden');
   startListeners();
 };
-clearTimeout(window._ilSafety); // módulo carregou com sucesso
-const saved=localStorage.getItem('ilUser');
-if(saved){currentUser=saved;document.getElementById('modalUser').classList.remove('open');document.getElementById('userLabel').textContent='👷 '+saved;document.getElementById('appShell').style.display='block';document.getElementById('loadingScreen').classList.add('hidden');startListeners();}
-else{document.getElementById('loadingScreen').classList.add('hidden');document.getElementById('modalUser').classList.add('open');}
+// startListeners: se o usuário já estava salvo, inicia sincronização Firebase
+if(currentUser) startListeners();
 
 // ── NAV ──
 window.toggleAcc=function(id){
