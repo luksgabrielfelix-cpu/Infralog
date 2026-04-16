@@ -173,9 +173,6 @@ select option{background:var(--surface);}
 .foto-upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
 .foto-preview{width:100%;border-radius:8px;margin-top:8px;max-height:200px;object-fit:cover;display:none;}
 .foto-thumb{width:64px;height:64px;border-radius:8px;object-fit:cover;cursor:pointer;border:2px solid var(--border);}
-.btn-foto-src{flex:1;background:var(--surface2);border:1.5px solid var(--border);color:var(--text2);border-radius:9px;padding:10px 6px;font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;}
-.btn-foto-src:active{background:var(--surface3);border-color:var(--accent);color:var(--accent-dark);}
-.foto-ts-badge{font-size:0.6rem;color:var(--muted);margin-top:5px;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:4px;}
 .foto-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:300;align-items:center;justify-content:center;}
 .foto-modal.open{display:flex;}
 .foto-modal img{max-width:95vw;max-height:90vh;border-radius:10px;object-fit:contain;}
@@ -288,17 +285,17 @@ select option{background:var(--surface);}
       <div class="form-group"><label class="form-label">Observações (opcional)</label><textarea id="rObs" rows="2" placeholder="Ex: Chuva à tarde, solo mole..."></textarea></div>
       <div class="form-group">
         <label class="form-label">📷 Foto (opcional)</label>
-        <div style="display:flex;gap:8px;margin-bottom:8px">
-          <button type="button" class="btn-foto-src" onclick="document.getElementById('fotoInputLancarCam').click()">📷 Câmera</button>
-          <button type="button" class="btn-foto-src" onclick="document.getElementById('fotoInputLancarGal').click()">🖼️ Galeria</button>
+        <div class="foto-upload-area" id="fotoAreaLancar">
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <button type="button" onclick="document.getElementById('fotoInputLancarCam').click()" style="flex:1;padding:8px;border:1.5px solid var(--blue);background:var(--surface);color:var(--blue);border-radius:8px;cursor:pointer;font-size:0.8rem;font-weight:600">📷 Câmera</button>
+            <button type="button" onclick="document.getElementById('fotoInputLancarGal').click()" style="flex:1;padding:8px;border:1.5px solid var(--accent);background:var(--surface);color:var(--accent);border-radius:8px;cursor:pointer;font-size:0.8rem;font-weight:600">🖼️ Galeria</button>
+          </div>
+          <input type="file" id="fotoInputLancarCam" accept="image/*" capture="environment" style="display:none" onchange="previewFotoFrom('Lancar',this)">
+          <input type="file" id="fotoInputLancarGal" accept="image/*" style="display:none" onchange="previewFotoFrom('Lancar',this)">
+          <div id="fotoPlaceholderLancar"><div style="font-size:1.6rem;margin-bottom:4px">📷</div><div style="font-size:0.72rem;color:var(--muted)">Toque para tirar ou escolher foto</div></div>
+          <img id="fotoPreviewLancar" class="foto-preview">
         </div>
-        <input type="file" id="fotoInputLancarCam" accept="image/*" capture="environment" style="display:none" onchange="previewFoto('Lancar',this)">
-        <input type="file" id="fotoInputLancarGal" accept="image/*" style="display:none" onchange="previewFoto('Lancar',this)">
-        <div id="fotoPreviewAreaLancar" style="display:none;margin-top:4px">
-          <img id="fotoPreviewLancar" class="foto-preview" style="display:block">
-          <div class="foto-ts-badge" id="fotoTsLancarDisplay"></div>
-          <button style="margin-top:4px;font-size:0.7rem;background:none;border:none;color:var(--danger);cursor:pointer" onclick="removerFoto('Lancar')">✕ Remover foto</button>
-        </div>
+        <button id="btnRemFotoLancar" style="display:none;margin-top:6px;font-size:0.7rem;background:none;border:none;color:var(--danger);cursor:pointer" onclick="removerFoto('Lancar')">✕ Remover foto</button>
       </div>
       <button class="btn-primary" onclick="lancar()">✓ REGISTRAR EXECUÇÃO</button>
     </div>
@@ -461,17 +458,17 @@ select option{background:var(--surface);}
     <div class="form-group"><label class="form-label">Obs</label><textarea id="mlObs" rows="2" placeholder="Observações..."></textarea></div>
     <div class="form-group">
       <label class="form-label">📷 Foto (opcional)</label>
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <button type="button" class="btn-foto-src" onclick="document.getElementById('fotoInputModalCam').click()">📷 Câmera</button>
-        <button type="button" class="btn-foto-src" onclick="document.getElementById('fotoInputModalGal').click()">🖼️ Galeria</button>
+      <div class="foto-upload-area">
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button type="button" onclick="document.getElementById('fotoInputModalCam').click()" style="flex:1;padding:8px;border:1.5px solid var(--blue);background:var(--surface);color:var(--blue);border-radius:8px;cursor:pointer;font-size:0.8rem;font-weight:600">📷 Câmera</button>
+          <button type="button" onclick="document.getElementById('fotoInputModalGal').click()" style="flex:1;padding:8px;border:1.5px solid var(--accent);background:var(--surface);color:var(--accent);border-radius:8px;cursor:pointer;font-size:0.8rem;font-weight:600">🖼️ Galeria</button>
+        </div>
+        <input type="file" id="fotoInputModalCam" accept="image/*" capture="environment" style="display:none" onchange="previewFotoFrom('Modal',this)">
+        <input type="file" id="fotoInputModalGal" accept="image/*" style="display:none" onchange="previewFotoFrom('Modal',this)">
+        <div id="fotoPlaceholderModal"><div style="font-size:1.4rem;margin-bottom:4px">📷</div><div style="font-size:0.7rem;color:var(--muted)">Toque para foto</div></div>
+        <img id="fotoPreviewModal" class="foto-preview">
       </div>
-      <input type="file" id="fotoInputModalCam" accept="image/*" capture="environment" style="display:none" onchange="previewFoto('Modal',this)">
-      <input type="file" id="fotoInputModalGal" accept="image/*" style="display:none" onchange="previewFoto('Modal',this)">
-      <div id="fotoPreviewAreaModal" style="display:none;margin-top:4px">
-        <img id="fotoPreviewModal" class="foto-preview" style="display:block">
-        <div class="foto-ts-badge" id="fotoTsModalDisplay"></div>
-        <button style="margin-top:4px;font-size:0.7rem;background:none;border:none;color:var(--danger);cursor:pointer" onclick="removerFoto('Modal')">✕ Remover foto</button>
-      </div>
+      <button id="btnRemFotoModal" style="display:none;margin-top:6px;font-size:0.7rem;background:none;border:none;color:var(--danger);cursor:pointer" onclick="removerFoto('Modal')">✕ Remover foto</button>
     </div>
     <button class="btn-primary" onclick="confirmarModal()">✓ REGISTRAR</button>
   </div>
@@ -563,7 +560,7 @@ let atvOverrides={};  // {id: {nome, unid}} para sobrescrever padrões
 let atvExt=[];        // atividades totalmente novas
 let catExt=[];        // categorias personalizadas
 let secoes=[],regs=[],mCtx=null,unidSel='',currentUser='',editSecCtx=null,editAtvCtx=null;
-let fotoDataLancar=null,fotoDataModal=null,fotoTsLancar=null,fotoTsModal=null;
+let fotoDataLancar=null,fotoDataModal=null;
 const sortAlpha=(arr,key='nome')=>arr.slice().sort((a,b)=>(a[key]||'').localeCompare(b[key]||'','pt-BR',{sensitivity:'base'}));
 
 // ── ATIVIDADES: mescla padrão + overrides + extras ──
@@ -644,11 +641,52 @@ function renderCurrent(){
 }
 
 // ── FOTO: COMPRESS + PREVIEW ──
-window.previewFoto=function(ctx,inputEl){
+window.previewFotoFrom=function(ctx,inputEl){
   const file=inputEl.files[0];if(!file)return;
-  const ts=new Date();
-  if(ctx==='Lancar')fotoTsLancar=ts.toISOString();
-  else fotoTsModal=ts.toISOString();
+  const prog=document.getElementById('uploadProgress'+ctx);
+  const bar=document.getElementById('uploadBar'+ctx);
+  const txt=document.getElementById('uploadTxt'+ctx);
+  if(prog){prog.classList.add('show');if(bar)bar.style.width='30%';if(txt)txt.textContent='Comprimindo foto...';}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      const MAX=800;
+      let w=img.width,h=img.height;
+      if(w>h){if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}}else{if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}}
+      canvas.width=w;canvas.height=h;
+      const c2d=canvas.getContext('2d');
+      c2d.drawImage(img,0,0,w,h);
+      const now=new Date();
+      const ts=now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      const fs=Math.max(12,Math.round(w/28));
+      c2d.font=`bold ${fs}px monospace`;
+      const tw=c2d.measureText(ts).width+12;
+      c2d.fillStyle='rgba(0,0,0,0.55)';
+      c2d.fillRect(w-tw-6,h-fs-14,tw+4,fs+10);
+      c2d.fillStyle='#fff';
+      c2d.fillText(ts,w-tw,h-8);
+      if(bar)bar.style.width='80%';
+      const compressed=canvas.toDataURL('image/jpeg',0.72);
+      if(ctx==='Lancar')fotoDataLancar=compressed;
+      else fotoDataModal=compressed;
+      const preview=document.getElementById('fotoPreview'+ctx);
+      const placeholder=document.getElementById('fotoPlaceholder'+ctx);
+      const btnRem=document.getElementById('btnRemFoto'+ctx);
+      preview.src=compressed;preview.style.display='block';
+      if(placeholder)placeholder.style.display='none';
+      if(btnRem)btnRem.style.display='block';
+      if(bar)bar.style.width='100%';
+      setTimeout(()=>{if(prog)prog.classList.remove('show');},600);
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+};
+window.previewFoto=function(ctx){
+  const input=document.getElementById('fotoInput'+ctx);
+  const file=input.files[0];if(!file)return;
   const prog=document.getElementById('uploadProgress'+ctx);
   const bar=document.getElementById('uploadBar'+ctx);
   const txt=document.getElementById('uploadTxt'+ctx);
@@ -668,11 +706,11 @@ window.previewFoto=function(ctx,inputEl){
       if(ctx==='Lancar')fotoDataLancar=compressed;
       else fotoDataModal=compressed;
       const preview=document.getElementById('fotoPreview'+ctx);
-      const area=document.getElementById('fotoPreviewArea'+ctx);
-      const tsEl=document.getElementById('fotoTs'+ctx+'Display');
-      preview.src=compressed;
-      if(area)area.style.display='block';
-      if(tsEl)tsEl.textContent='📅 '+ts.toLocaleDateString('pt-BR')+' '+ts.toLocaleTimeString('pt-BR');
+      const placeholder=document.getElementById('fotoPlaceholder'+ctx);
+      const btnRem=document.getElementById('btnRemFoto'+ctx);
+      preview.src=compressed;preview.style.display='block';
+      if(placeholder)placeholder.style.display='none';
+      if(btnRem)btnRem.style.display='block';
       if(bar)bar.style.width='100%';
       setTimeout(()=>{if(prog)prog.classList.remove('show');},600);
     };
@@ -681,17 +719,14 @@ window.previewFoto=function(ctx,inputEl){
   reader.readAsDataURL(file);
 };
 window.removerFoto=function(ctx){
-  if(ctx==='Lancar'){fotoDataLancar=null;fotoTsLancar=null;}else{fotoDataModal=null;fotoTsModal=null;}
+  if(ctx==='Lancar')fotoDataLancar=null;else fotoDataModal=null;
   const preview=document.getElementById('fotoPreview'+ctx);
-  const area=document.getElementById('fotoPreviewArea'+ctx);
-  const tsEl=document.getElementById('fotoTs'+ctx+'Display');
-  const inputCam=document.getElementById('fotoInput'+ctx+'Cam');
-  const inputGal=document.getElementById('fotoInput'+ctx+'Gal');
-  if(preview){preview.src='';preview.style.display='none';}
-  if(area)area.style.display='none';
-  if(tsEl)tsEl.textContent='';
-  if(inputCam)inputCam.value='';
-  if(inputGal)inputGal.value='';
+  const placeholder=document.getElementById('fotoPlaceholder'+ctx);
+  const btnRem=document.getElementById('btnRemFoto'+ctx);
+  preview.style.display='none';preview.src='';
+  if(placeholder)placeholder.style.display='block';
+  if(btnRem)btnRem.style.display='none';
+  ['Cam','Gal',''].forEach(s=>{const inp=document.getElementById('fotoInput'+ctx+s);if(inp)inp.value='';});
 };
 window.verFoto=function(src){
   document.getElementById('fotoModalImg').src=src;
@@ -800,7 +835,7 @@ window.lancar=async function(){
   setSS('syncing');
   try{
     const payload={secaoId:secId,catId,atvId,qtd,data,obs,usuario:currentUser,ts:serverTimestamp()};
-    if(fotoDataLancar){payload.foto=fotoDataLancar;if(fotoTsLancar)payload.fotoTs=fotoTsLancar;}
+    if(fotoDataLancar)payload.foto=fotoDataLancar;
     await addDoc(collection(db,'registros'),payload);
     document.getElementById('rQtd').value='';document.getElementById('rObs').value='';
     removerFoto('Lancar');
@@ -830,9 +865,9 @@ window.confirmarModal=async function(){
   setSS('syncing');
   try{
     const payload={secaoId:secId,catId,atvId,qtd,data,obs,usuario:currentUser,ts:serverTimestamp()};
-    if(fotoDataModal){payload.foto=fotoDataModal;if(fotoTsModal)payload.fotoTs=fotoTsModal;}
+    if(fotoDataModal)payload.foto=fotoDataModal;
     await addDoc(collection(db,'registros'),payload);
-    closeModal('modalLancar');toast('Registrado! ✓');setSS('online');
+    closeModal('modalLancar');renderSecoes();toast('Registrado! ✓');setSS('online');
     removerFoto('Modal');
   }catch(e){
     if(e.message&&e.message.includes('longer than'))alert('Foto muito grande! Tente com menos qualidade.');
@@ -851,42 +886,44 @@ function renderHist(){
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">🕓</div><div class="empty-text">Sem registros ainda.</div></div>';return;}
   el.innerHTML=list.map(r=>{
     const sec=getSec(r.secaoId);const info=getAtv(r.atvId);const cat=getCat(sec,r.catId);const ci=catInfo(cat?.tipo);
-    const fotoTs=r.fotoTs?new Date(r.fotoTs):'';
-    const fotoHtml=r.foto?`<div style="margin-top:8px"><img src="${r.foto}" class="foto-thumb" onclick="verFoto('${r.foto}')" alt="foto">${fotoTs?`<div class="foto-ts-badge" style="margin-top:3px">📅 ${fotoTs.toLocaleDateString('pt-BR')} ${fotoTs.toLocaleTimeString('pt-BR')}</div>`:''}</div>`:'';
+    const fotoHtml=r.foto?`<div style="margin-top:8px"><img src="${r.foto}" class="foto-thumb" onclick="verFoto('${r.foto}')" alt="foto"></div>`:'';
     return`<div class="hist-item"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px"><span class="tag">Seção ${sec?sec.cod:'?'}</span><span class="cat-badge ${ci.cls}" style="font-size:0.6rem;padding:2px 7px">${ci.icon} ${ci.label}</span><span style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--muted)">${fmtD(r.data)}</span></div><div style="font-size:0.78rem;margin-top:5px"><b>${info.nome}</b> — <span style="color:var(--green)">${nF(r.qtd)} ${info.unid}</span></div>${r.usuario?`<div style="font-size:0.62rem;color:var(--blue);margin-top:2px">👷 ${r.usuario}</div>`:''}${r.obs?`<div style="font-size:0.68rem;color:var(--muted);margin-top:2px">💬 ${r.obs}</div>`:''}${fotoHtml}</div>`;
   }).join('');
 }
 
 // ── RELATÓRIO ──
 function renderRel(){
-  const curSec=document.getElementById('relSec').value;
-  const curCat=document.getElementById('relCat').value;
   document.getElementById('relSec').innerHTML='<option value="">Todas</option>'+
-    secoes.map(s=>`<option value="${s.id}"${s.id===curSec?' selected':''}>Seção ${s.cod}${s.desc?' — '+s.desc:''}</option>`).join('');
-  // Deduplica por tipo+obs (evita repetição entre seções)
+    secoes.map(s=>`<option value="${s.id}">Seção ${s.cod}${s.desc?' — '+s.desc:''}</option>`).join('');
+  // Listar todas as categorias únicas das seções (deduplic por tipo+obs)
   const catsMap={};
   secoes.forEach(s=>(s.categorias||[]).forEach(cat=>{
-    const key=cat.tipo+(cat.obs||'');
+    const key=cat.tipo+'|'+(cat.obs||'');
     if(!catsMap[key]){
       const ci=catInfo(cat.tipo);
-      const lbl=cat.obs?ci.label+' / '+cat.obs:ci.label;
-      catsMap[key]={key,tipo:cat.tipo,obs:cat.obs||'',label:lbl,icon:ci.icon};
+      const lbl=cat.obs?ci.label+' — '+cat.obs:ci.label;
+      catsMap[key]={key,label:lbl,icon:ci.icon};
     }
   }));
   const catsArr=Object.values(catsMap).sort((a,b)=>a.label.localeCompare(b.label,'pt-BR'));
   document.getElementById('relCat').innerHTML='<option value="">Todas</option>'+
-    catsArr.map(c=>`<option value="${c.key}"${c.key===curCat?' selected':''}>${c.icon} ${c.label}</option>`).join('');
+    catsArr.map(c=>`<option value="${c.key}">${c.icon} ${c.label}</option>`).join('');
   try{gerarPrevia();}catch(e){console.error('gerarPrevia erro:',e);}
 }
 function filtrarRegs(){
   try{
     const sId=(document.getElementById('relSec')?.value)||'';
-    const cKey=(document.getElementById('relCat')?.value)||'';
+    const cId=(document.getElementById('relCat')?.value)||'';
     const dI=(document.getElementById('relDI')?.value)||'';
     const dF=(document.getElementById('relDF')?.value)||'';
     return regs.filter(r=>{
       if(sId&&r.secaoId!==sId)return false;
-      if(cKey){const sec=getSec(r.secaoId);const cat=getCat(sec,r.catId);if(!cat||cat.tipo+(cat.obs||'')!==cKey)return false;}
+      if(cId){
+        const sec=getSec(r.secaoId);const cat=getCat(sec,r.catId);
+        const[tipo,obs]=cId.split('|');
+        if(!cat||cat.tipo!==tipo)return false;
+        if(obs&&(cat.obs||'')!==obs)return false;
+      }
       if(dI&&r.data<dI)return false;
       if(dF&&r.data>dF)return false;
       return true;
@@ -897,10 +934,11 @@ function montarRows(){
   try{
   const rFilt=filtrarRegs();
   const sId=(document.getElementById('relSec')?.value)||'';
-  const cKey=(document.getElementById('relCat')?.value)||'';
+  const cId=(document.getElementById('relCat')?.value)||'';
   const rows=[];
   (sId?secoes.filter(s=>s.id===sId):secoes).forEach(s=>{
-    (cKey?(s.categorias||[]).filter(c=>c.tipo+(c.obs||'')===cKey):s.categorias||[]).forEach(cat=>{
+    const catsFilt=cId?((s.categorias||[]).filter(c=>{const[tipo,obs]=cId.split('|');return c.tipo===tipo&&(!obs||(c.obs||'')===obs);})):s.categorias||[];
+    catsFilt.forEach(cat=>{
       const ci=catInfo(cat.tipo);
       (cat.atividades||[]).forEach(a=>{const info=getAtv(a.id);const ex=rFilt.filter(r=>r.secaoId===s.id&&r.catId===cat.id&&r.atvId===a.id).reduce((acc,r)=>acc+r.qtd,0);rows.push({secao:'Seção '+s.cod,descSec:s.desc||'',categoria:ci.label,catObs:cat.obs||'',atividade:info.nome,unid:info.unid,prev:a.qtdTotal||0,exec:ex,saldo:(a.qtdTotal||0)-ex,pct:pct(ex,a.qtdTotal||0)});});
     });
@@ -908,12 +946,6 @@ function montarRows(){
   return rows;
   }catch(e){console.error('montarRows erro:',e);return[];}
 }
-const nomeArquivo=()=>{
-  const di=document.getElementById('relDI')?.value||'';
-  const df=document.getElementById('relDF')?.value||'';
-  const fmt=d=>d?d.split('-').reverse().join(''):'';
-  return di||df?`Relatorio_de_Avanco_${fmt(di)||'inicio'}_a_${fmt(df)||'fim'}`:`Relatorio_de_Avanco_${fmt(hoje())}`;
-};
 function gerarPrevia(){
   const rows=montarRows();const el=document.getElementById('relPrevia');
   if(!rows.length){el.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Sem dados para os filtros selecionados.</div></div>';return;}
@@ -939,25 +971,29 @@ window.exportExcel=function(){
   ws1['!cols']=[{wch:10},{wch:20},{wch:16},{wch:16},{wch:28},{wch:7},{wch:11},{wch:11},{wch:10},{wch:8}];XLSX.utils.book_append_sheet(wb,ws1,'Resumo');
   const ws2=XLSX.utils.aoa_to_sheet([['HISTÓRICO'],[],['Data','Seção','Categoria','Atividade','Qtd.','Unid.','Usuário','Observações','Foto?'],...rFilt.map(r=>{const sec=getSec(r.secaoId);const cat=getCat(sec,r.catId);const ci=catInfo(cat?.tipo);const info=getAtv(r.atvId);return[fmtD(r.data),sec?'Seção '+sec.cod:'?',ci.label,info.nome,r.qtd,info.unid,r.usuario||'',r.obs||'',r.foto?'Sim':'Não'];})]);
   ws2['!cols']=[{wch:12},{wch:10},{wch:16},{wch:28},{wch:10},{wch:7},{wch:14},{wch:36},{wch:6}];XLSX.utils.book_append_sheet(wb,ws2,'Histórico');
-  XLSX.writeFile(wb,nomeArquivo()+'.xlsx');toast('Excel gerado! ✓');
+  const dI=(document.getElementById('relDI')?.value)||'';
+  const dF=(document.getElementById('relDF')?.value)||'';
+  const periodoXls=dI&&dF?`_${fmtD(dI).replace(/\//g,'-')}_a_${fmtD(dF).replace(/\//g,'-')}`:dI?`_a_partir_${fmtD(dI).replace(/\//g,'-')}`:dF?`_ate_${fmtD(dF).replace(/\//g,'-')}`:'';
+  XLSX.writeFile(wb,`Relatório de Avanço${periodoXls}.xlsx`);toast('Excel gerado! ✓');
 };
 
 window.exportPDF=function(){
   const rows=montarRows();if(!rows.length){alert('Sem dados.');return;}
   const rFilt=filtrarRegs().sort((a,b)=>(a.data||'').localeCompare(b.data||''));
-  let tG=0,eG=0;rows.forEach(r=>{tG+=r.prev;eG+=r.exec;});
-  const di=document.getElementById('relDI')?.value||'';
-  const df=document.getElementById('relDF')?.value||'';
-  const periodo=di||df?`Período: ${di?fmtD(di):'início'} a ${df?fmtD(df):'fim'}`:'';
+  let tG=0,eG=0;secoes.forEach(s=>(s.categorias||[]).forEach(cat=>(cat.atividades||[]).forEach(a=>{tG+=a.qtdTotal||0;eG+=execTot(s.id,cat.id,a.id);})));
+  const byCat={};secoes.forEach(s=>(s.categorias||[]).forEach(cat=>{const tipo=cat.tipo;if(!byCat[tipo])byCat[tipo]={label:catInfo(tipo).label,tot:0,exec:0};(cat.atividades||[]).forEach(a=>{byCat[tipo].tot+=a.qtdTotal||0;byCat[tipo].exec+=execTot(s.id,cat.id,a.id);});}));
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:10.5px;color:#0a1020;}.hd{background:#0a1020;color:#fff;padding:18px 22px;}.hd h1{font-size:18px;color:#00d4ff;font-weight:900;margin-bottom:3px;}.hd .sub{font-size:9.5px;color:#6b8aa0;}.pg{padding:16px 22px;}.meta{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:14px;}.mb{background:#f0f4f8;border-radius:5px;padding:9px 11px;border-left:3px solid #00d4ff;}.mb .l{font-size:8px;color:#888;text-transform:uppercase;}.mb .v{font-size:14px;font-weight:800;margin-top:2px;}h2{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#555;border-bottom:2px solid #00d4ff;padding-bottom:4px;margin:14px 0 9px;}table{width:100%;border-collapse:collapse;font-size:9.5px;margin-bottom:5px;}th{background:#0a1020;color:#fff;padding:6px 7px;text-align:left;font-size:8.5px;}td{padding:5px 7px;border-bottom:1px solid #e8eef4;}tr:nth-child(even) td{background:#f8fafc;}.badge{display:inline-block;background:#00d4ff;color:#000;font-weight:800;border-radius:4px;padding:1px 6px;font-size:8px;}.ft{margin-top:14px;padding:9px 22px;background:#f0f4f8;font-size:8px;color:#888;text-align:center;border-top:1px solid #dde4ed;}.foto-pdf{width:80px;height:60px;object-fit:cover;border-radius:4px;vertical-align:middle;}@media print{@page{margin:10mm;}}</style></head><body>
-<div class="hd"><h1>InfraLog — Relatório de Avanço</h1><div style="font-size:14px;color:#ccc;font-weight:700;margin-bottom:4px">${cfg.nome||'Obra'}</div><div class="sub">${cfg.contrato?'Contrato: '+cfg.contrato+' · ':''}Responsável: ${cfg.resp||'—'} · Emitido: ${fmtD(hoje())}${periodo?' · '+periodo:''}</div></div>
-<div class="pg"><div class="meta"><div class="mb"><div class="l">Lançamentos</div><div class="v">${rFilt.length}</div></div><div class="mb"><div class="l">Seções</div><div class="v">${secoes.length}</div></div><div class="mb"><div class="l">Data</div><div class="v" style="font-size:10px">${fmtD(hoje())}</div></div>${periodo?`<div class="mb"><div class="l">Período</div><div class="v" style="font-size:9px">${di?fmtD(di):'—'} a ${df?fmtD(df):'—'}</div></div>`:'<div></div>'}</div>
+<div class="hd"><h1>InfraLog — Relatório de Avanço</h1><div style="font-size:14px;color:#ccc;font-weight:700;margin-bottom:4px">${cfg.nome||'Obra'}</div><div class="sub">${cfg.contrato?'Contrato: '+cfg.contrato+' · ':''}Responsável: ${cfg.resp||'—'} · Emitido: ${fmtD(hoje())}</div></div>
+<div class="pg"><div class="meta"><div class="mb"><div class="l">Avanço Geral</div><div class="v" style="color:#0099cc">${pct(eG,tG)}%</div></div><div class="mb"><div class="l">Seções</div><div class="v">${secoes.length}</div></div><div class="mb"><div class="l">Lançamentos</div><div class="v">${regs.length}</div></div><div class="mb"><div class="l">Data</div><div class="v" style="font-size:10px">${fmtD(hoje())}</div></div></div>
 <h2>Detalhamento Seção / Categoria / Atividade</h2><table><thead><tr><th>Seção</th><th>Categoria</th><th>Atividade</th><th>Unid.</th><th>Previsto</th><th>Executado</th><th>Saldo</th><th>%</th></tr></thead><tbody>${rows.map(r=>{const cor=r.pct>=100?'#16a34a':r.pct>=50?'#d97706':'#2563eb';return`<tr><td><span class="badge">${r.secao.replace('Seção ','')}</span></td><td>${r.categoria}${r.catObs?' ('+r.catObs+')':''}</td><td>${r.atividade}</td><td>${r.unid}</td><td>${nF(r.prev)}</td><td style="color:#16a34a;font-weight:700">${nF(r.exec)}</td><td>${nF(r.saldo)}</td><td style="color:${cor};font-weight:700">${r.pct}%</td></tr>`;}).join('')}</tbody></table>
 <h2>Histórico com Fotos (${rFilt.length} lançamentos)</h2><table><thead><tr><th>Data</th><th>Seção</th><th>Categoria</th><th>Atividade</th><th>Qtd.</th><th>Usuário</th><th>Obs.</th><th>Foto</th></tr></thead><tbody>${rFilt.map(r=>{const sec=getSec(r.secaoId);const cat=getCat(sec,r.catId);const ci=catInfo(cat?.tipo);const info=getAtv(r.atvId);return`<tr><td>${fmtD(r.data)}</td><td>${sec?'Seção '+sec.cod:'?'}</td><td>${ci.label}</td><td>${info.nome}</td><td style="font-weight:700">${nF(r.qtd)} ${info.unid}</td><td style="color:#2563eb">${r.usuario||'—'}</td><td style="color:#888">${r.obs||'—'}</td><td>${r.foto?`<img src="${r.foto}" class="foto-pdf">`:'-'}</td></tr>`;}).join('')}</tbody></table>
 </div><div class="ft">InfraLog · ${cfg.nome||''} · ${cfg.resp||''} · ${new Date().toLocaleString('pt-BR')}</div></body></html>`;
+  const dIpdf=(document.getElementById('relDI')?.value)||'';
+  const dFpdf=(document.getElementById('relDF')?.value)||'';
+  const periodoPdf=dIpdf&&dFpdf?`_${fmtD(dIpdf).replace(/\//g,'-')}_a_${fmtD(dFpdf).replace(/\//g,'-')}`:dIpdf?`_a_partir_${fmtD(dIpdf).replace(/\//g,'-')}`:dFpdf?`_ate_${fmtD(dFpdf).replace(/\//g,'-')}`:'';
   const blob=new Blob([html],{type:'text/html'});const url=URL.createObjectURL(blob);
   const w=window.open(url,'_blank');if(w)setTimeout(()=>w.print(),800);
-  else{const a=document.createElement('a');a.href=url;a.download=nomeArquivo()+'.html';a.click();}
+  else{const a=document.createElement('a');a.href=url;a.download=`Relatório de Avanço${periodoPdf}.html`;a.click();}
   toast('PDF aberto — Imprimir → Salvar como PDF ✓');
 };
 
@@ -1288,4 +1324,60 @@ window.selIcon=function(el,icon){
   el.classList.add('selected');iconSel=icon;
 };
 window.selIconEdit=function(el,icon){
-  document.querySelectorAll('#editIconChips .chip').forEach(c=>c.classList.rem
+  document.querySelectorAll('#editIconChips .chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');iconSelEdit=icon;
+};
+window.addCategoria=async function(){
+  const nome=document.getElementById('ncNome').value.trim();
+  const icon=iconSel||'⚙️';
+  if(!nome){alert('Informe o nome da categoria.');return;}
+  const tipo='cat_'+Date.now();
+  setSS('syncing');
+  try{
+    await addDoc(collection(db,'categorias'),{tipo,label:nome,icon,cls:'cat-b-cyan'});
+    document.getElementById('ncNome').value='';
+    iconSel='';
+    document.querySelectorAll('#iconChips .chip').forEach(c=>c.classList.remove('selected'));
+    toast('Categoria "'+nome+'" criada! ✓');setSS('online');
+  }catch(e){alert('Erro: '+e.message);}
+};
+window.abrirEditCat=function(tipo){
+  const c=catInfo(tipo);
+  const isExt=catExt.find(x=>x.tipo===tipo);
+  editCatCtx={tipo,isExt};
+  document.getElementById('editCatSub').textContent=isExt?'Categoria personalizada':'Categoria padrão';
+  document.getElementById('editCatNome').value=c.label;
+  iconSelEdit=c.icon;
+  document.querySelectorAll('#editIconChips .chip').forEach(ch=>{
+    ch.classList.toggle('selected',ch.textContent.trim()===c.icon);
+  });
+  document.getElementById('modalEditCat').classList.add('open');
+};
+window.salvarEdicaoCat=async function(){
+  if(!editCatCtx)return;
+  const label=document.getElementById('editCatNome').value.trim();
+  const icon=iconSelEdit||'⚙️';
+  if(!label){alert('Informe o nome.');return;}
+  setSS('syncing');
+  try{
+    if(editCatCtx.isExt){
+      await updateDoc(doc(db,'categorias',editCatCtx.isExt._docId),{label,icon});
+    } else {
+      const existing=catExt.find(c=>c.tipo===editCatCtx.tipo);
+      if(existing){await updateDoc(doc(db,'categorias',existing._docId),{label,icon});}
+      else{await addDoc(collection(db,'categorias'),{tipo:editCatCtx.tipo,label,icon,cls:'cat-b-cyan'});}
+    }
+    closeModal('modalEditCat');toast('Categoria atualizada! ✓');setSS('online');
+  }catch(e){alert('Erro: '+e.message);}
+};
+window.delCategoria=async function(docId){
+  if(!confirm('Remover esta categoria?'))return;
+  setSS('syncing');
+  await deleteDoc(doc(db,'categorias',docId));
+  setSS('online');toast('Removida.');
+};
+
+window.toast=function(msg){const t=document.createElement('div');t.style.cssText='position:fixed;bottom:94px;left:50%;transform:translateX(-50%);background:#4ade80;color:#000;font-weight:700;padding:11px 22px;border-radius:30px;font-size:0.82rem;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:fadeUp .3s ease;white-space:nowrap';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500);};
+</script>
+</body>
+</html>
