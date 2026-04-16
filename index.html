@@ -72,7 +72,7 @@ header{background:linear-gradient(135deg,#006699,#0099cc);padding:14px 16px;posi
 
 /* ── PROGRESS ── */
 .pb-wrap{background:var(--surface2);border-radius:100px;overflow:hidden;margin:4px 0;}
-.pb-fill{border-radius:100px;transition:width .6s ease;height:100%;}
+.pb-fill{border-radius:100px;transition:width .6s ease;}
 .pb-h6{height:6px;}.pb-h8{height:8px;}.pb-h12{height:12px;}
 .c-green{background:linear-gradient(90deg,#16a34a,#22c55e);}
 .c-yellow{background:linear-gradient(90deg,#d97706,#f59e0b);}
@@ -195,7 +195,7 @@ select option{background:var(--surface);}
 <body>
 
 <!-- LOADING -->
-<div class="loading-screen hidden" id="loadingScreen">
+<div class="loading-screen" id="loadingScreen">
   <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style="filter:drop-shadow(0 0 12px rgba(0,212,255,.6))">
     <rect x="4" y="28" width="8" height="20" rx="2" fill="#00d4ff" opacity="0.5"/>
     <rect x="16" y="20" width="8" height="28" rx="2" fill="#00d4ff" opacity="0.7"/>
@@ -286,12 +286,7 @@ select option{background:var(--surface);}
       <div class="form-group">
         <label class="form-label">📷 Foto (opcional)</label>
         <div class="foto-upload-area" id="fotoAreaLancar">
-          <div style="display:flex;gap:8px;margin-bottom:8px">
-            <button type="button" onclick="document.getElementById('fotoInputLancarCam').click()" style="flex:1;padding:8px;border:1.5px solid var(--blue);background:var(--surface);color:var(--blue);border-radius:8px;cursor:pointer;font-size:0.8rem;font-weight:600">📷 Câmera</button>
-            <button type="button" onclick="document.getElementById('fotoInputLancarGal').click()" style="flex:1;padding:8px;border:1.5px solid var(--accent);background:var(--surface);color:var(--accent);border-radius:8px;cursor:pointer;font-size:0.8rem;font-weight:600">🖼️ Galeria</button>
-          </div>
-          <input type="file" id="fotoInputLancarCam" accept="image/*" capture="environment" style="display:none" onchange="previewFotoFrom('Lancar',this)">
-          <input type="file" id="fotoInputLancarGal" accept="image/*" style="display:none" onchange="previewFotoFrom('Lancar',this)">
+          <input type="file" id="fotoInputLancar" accept="image/*" capture="environment" onchange="previewFoto('Lancar')">
           <div id="fotoPlaceholderLancar"><div style="font-size:1.6rem;margin-bottom:4px">📷</div><div style="font-size:0.72rem;color:var(--muted)">Toque para tirar ou escolher foto</div></div>
           <img id="fotoPreviewLancar" class="foto-preview">
         </div>
@@ -459,12 +454,7 @@ select option{background:var(--surface);}
     <div class="form-group">
       <label class="form-label">📷 Foto (opcional)</label>
       <div class="foto-upload-area">
-        <div style="display:flex;gap:8px;margin-bottom:8px">
-          <button type="button" onclick="document.getElementById('fotoInputModalCam').click()" style="flex:1;padding:8px;border:1.5px solid var(--blue);background:var(--surface);color:var(--blue);border-radius:8px;cursor:pointer;font-size:0.8rem;font-weight:600">📷 Câmera</button>
-          <button type="button" onclick="document.getElementById('fotoInputModalGal').click()" style="flex:1;padding:8px;border:1.5px solid var(--accent);background:var(--surface);color:var(--accent);border-radius:8px;cursor:pointer;font-size:0.8rem;font-weight:600">🖼️ Galeria</button>
-        </div>
-        <input type="file" id="fotoInputModalCam" accept="image/*" capture="environment" style="display:none" onchange="previewFotoFrom('Modal',this)">
-        <input type="file" id="fotoInputModalGal" accept="image/*" style="display:none" onchange="previewFotoFrom('Modal',this)">
+        <input type="file" id="fotoInputModal" accept="image/*" capture="environment" onchange="previewFoto('Modal')">
         <div id="fotoPlaceholderModal"><div style="font-size:1.4rem;margin-bottom:4px">📷</div><div style="font-size:0.7rem;color:var(--muted)">Toque para foto</div></div>
         <img id="fotoPreviewModal" class="foto-preview">
       </div>
@@ -527,18 +517,6 @@ select option{background:var(--surface);}
 </div>
 
 
-<script>
-// Safety net: se o módulo principal não carregar em 10s, esconde o loading e mostra aviso
-window._ilSafety=setTimeout(function(){
-  var ls=document.getElementById('loadingScreen');
-  if(ls&&!ls.classList.contains('hidden')){
-    ls.classList.add('hidden');
-    var mu=document.getElementById('modalUser');
-    if(mu)mu.classList.add('open');
-    console.warn('InfraLog: Firebase demorou demais - verifique sua conexão');
-  }
-},10000);
-</script>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
 import{getFirestore,doc,setDoc,updateDoc,addDoc,deleteDoc,getDocs,collection,onSnapshot,query,orderBy,serverTimestamp,writeBatch}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
@@ -573,21 +551,6 @@ let atvExt=[];        // atividades totalmente novas
 let catExt=[];        // categorias personalizadas
 let secoes=[],regs=[],mCtx=null,unidSel='',currentUser='',editSecCtx=null,editAtvCtx=null;
 let fotoDataLancar=null,fotoDataModal=null;
-
-// ── INIT IMEDIATO: esconde loading e configura usuário sem esperar Firebase ──
-{
-  clearTimeout(window._ilSafety);
-  const _sv=localStorage.getItem('ilUser');
-  document.getElementById('loadingScreen').classList.add('hidden');
-  if(_sv){
-    currentUser=_sv;
-    document.getElementById('userLabel').textContent='👷 '+_sv;
-    document.getElementById('appShell').style.display='block';
-    document.getElementById('modalUser').classList.remove('open');
-  } else {
-    document.getElementById('modalUser').classList.add('open');
-  }
-}
 const sortAlpha=(arr,key='nome')=>arr.slice().sort((a,b)=>(a[key]||'').localeCompare(b[key]||'','pt-BR',{sensitivity:'base'}));
 
 // ── ATIVIDADES: mescla padrão + overrides + extras ──
@@ -668,49 +631,6 @@ function renderCurrent(){
 }
 
 // ── FOTO: COMPRESS + PREVIEW ──
-window.previewFotoFrom=function(ctx,inputEl){
-  const file=inputEl.files[0];if(!file)return;
-  const prog=document.getElementById('uploadProgress'+ctx);
-  const bar=document.getElementById('uploadBar'+ctx);
-  const txt=document.getElementById('uploadTxt'+ctx);
-  if(prog){prog.classList.add('show');if(bar)bar.style.width='30%';if(txt)txt.textContent='Comprimindo foto...';}
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const img=new Image();
-    img.onload=()=>{
-      const canvas=document.createElement('canvas');
-      const MAX=800;
-      let w=img.width,h=img.height;
-      if(w>h){if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}}else{if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}}
-      canvas.width=w;canvas.height=h;
-      const c2d=canvas.getContext('2d');
-      c2d.drawImage(img,0,0,w,h);
-      const now=new Date();
-      const ts=now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-      const fs=Math.max(12,Math.round(w/28));
-      c2d.font=`bold ${fs}px monospace`;
-      const tw=c2d.measureText(ts).width+12;
-      c2d.fillStyle='rgba(0,0,0,0.55)';
-      c2d.fillRect(w-tw-6,h-fs-14,tw+4,fs+10);
-      c2d.fillStyle='#fff';
-      c2d.fillText(ts,w-tw,h-8);
-      if(bar)bar.style.width='80%';
-      const compressed=canvas.toDataURL('image/jpeg',0.72);
-      if(ctx==='Lancar')fotoDataLancar=compressed;
-      else fotoDataModal=compressed;
-      const preview=document.getElementById('fotoPreview'+ctx);
-      const placeholder=document.getElementById('fotoPlaceholder'+ctx);
-      const btnRem=document.getElementById('btnRemFoto'+ctx);
-      preview.src=compressed;preview.style.display='block';
-      if(placeholder)placeholder.style.display='none';
-      if(btnRem)btnRem.style.display='block';
-      if(bar)bar.style.width='100%';
-      setTimeout(()=>{if(prog)prog.classList.remove('show');},600);
-    };
-    img.src=e.target.result;
-  };
-  reader.readAsDataURL(file);
-};
 window.previewFoto=function(ctx){
   const input=document.getElementById('fotoInput'+ctx);
   const file=input.files[0];if(!file)return;
@@ -750,10 +670,11 @@ window.removerFoto=function(ctx){
   const preview=document.getElementById('fotoPreview'+ctx);
   const placeholder=document.getElementById('fotoPlaceholder'+ctx);
   const btnRem=document.getElementById('btnRemFoto'+ctx);
+  const input=document.getElementById('fotoInput'+ctx);
   preview.style.display='none';preview.src='';
   if(placeholder)placeholder.style.display='block';
   if(btnRem)btnRem.style.display='none';
-  ['Cam','Gal',''].forEach(s=>{const inp=document.getElementById('fotoInput'+ctx+s);if(inp)inp.value='';});
+  if(input)input.value='';
 };
 window.verFoto=function(src){
   document.getElementById('fotoModalImg').src=src;
@@ -768,10 +689,12 @@ window.confirmarUsuario=function(){
   document.getElementById('modalUser').classList.remove('open');
   document.getElementById('userLabel').textContent='👷 '+nome;
   document.getElementById('appShell').style.display='block';
+  document.getElementById('loadingScreen').classList.add('hidden');
   startListeners();
 };
-// startListeners: se o usuário já estava salvo, inicia sincronização Firebase
-if(currentUser) startListeners();
+const saved=localStorage.getItem('ilUser');
+if(saved){currentUser=saved;document.getElementById('modalUser').classList.remove('open');document.getElementById('userLabel').textContent='👷 '+saved;document.getElementById('appShell').style.display='block';document.getElementById('loadingScreen').classList.add('hidden');startListeners();}
+else{document.getElementById('loadingScreen').classList.add('hidden');document.getElementById('modalUser').classList.add('open');}
 
 // ── NAV ──
 window.toggleAcc=function(id){
@@ -920,19 +843,18 @@ function renderHist(){
 function renderRel(){
   document.getElementById('relSec').innerHTML='<option value="">Todas</option>'+
     secoes.map(s=>`<option value="${s.id}">Seção ${s.cod}${s.desc?' — '+s.desc:''}</option>`).join('');
-  // Listar todas as categorias únicas das seções (deduplic por tipo+obs)
+  // Listar todas as categorias únicas das seções (por catId real)
   const catsMap={};
   secoes.forEach(s=>(s.categorias||[]).forEach(cat=>{
-    const key=cat.tipo+'|'+(cat.obs||'');
-    if(!catsMap[key]){
+    if(!catsMap[cat.id]){
       const ci=catInfo(cat.tipo);
-      const lbl=cat.obs?ci.label+' — '+cat.obs:ci.label;
-      catsMap[key]={key,label:lbl,icon:ci.icon};
+      const lbl=cat.obs?ci.label+' / '+cat.obs:ci.label;
+      catsMap[cat.id]={id:cat.id,label:lbl,icon:ci.icon};
     }
   }));
   const catsArr=Object.values(catsMap).sort((a,b)=>a.label.localeCompare(b.label,'pt-BR'));
   document.getElementById('relCat').innerHTML='<option value="">Todas</option>'+
-    catsArr.map(c=>`<option value="${c.key}">${c.icon} ${c.label}</option>`).join('');
+    catsArr.map(c=>`<option value="${c.id}">${c.icon} ${c.label}</option>`).join('');
   try{gerarPrevia();}catch(e){console.error('gerarPrevia erro:',e);}
 }
 function filtrarRegs(){
@@ -943,12 +865,7 @@ function filtrarRegs(){
     const dF=(document.getElementById('relDF')?.value)||'';
     return regs.filter(r=>{
       if(sId&&r.secaoId!==sId)return false;
-      if(cId){
-        const sec=getSec(r.secaoId);const cat=getCat(sec,r.catId);
-        const[tipo,obs]=cId.split('|');
-        if(!cat||cat.tipo!==tipo)return false;
-        if(obs&&(cat.obs||'')!==obs)return false;
-      }
+      if(cId&&r.catId!==cId)return false;
       if(dI&&r.data<dI)return false;
       if(dF&&r.data>dF)return false;
       return true;
@@ -962,8 +879,7 @@ function montarRows(){
   const cId=(document.getElementById('relCat')?.value)||'';
   const rows=[];
   (sId?secoes.filter(s=>s.id===sId):secoes).forEach(s=>{
-    const catsFilt=cId?((s.categorias||[]).filter(c=>{const[tipo,obs]=cId.split('|');return c.tipo===tipo&&(!obs||(c.obs||'')===obs);})):s.categorias||[];
-    catsFilt.forEach(cat=>{
+    (cId?(s.categorias||[]).filter(c=>c.id===cId):s.categorias||[]).forEach(cat=>{
       const ci=catInfo(cat.tipo);
       (cat.atividades||[]).forEach(a=>{const info=getAtv(a.id);const ex=rFilt.filter(r=>r.secaoId===s.id&&r.catId===cat.id&&r.atvId===a.id).reduce((acc,r)=>acc+r.qtd,0);rows.push({secao:'Seção '+s.cod,descSec:s.desc||'',categoria:ci.label,catObs:cat.obs||'',atividade:info.nome,unid:info.unid,prev:a.qtdTotal||0,exec:ex,saldo:(a.qtdTotal||0)-ex,pct:pct(ex,a.qtdTotal||0)});});
     });
@@ -996,10 +912,7 @@ window.exportExcel=function(){
   ws1['!cols']=[{wch:10},{wch:20},{wch:16},{wch:16},{wch:28},{wch:7},{wch:11},{wch:11},{wch:10},{wch:8}];XLSX.utils.book_append_sheet(wb,ws1,'Resumo');
   const ws2=XLSX.utils.aoa_to_sheet([['HISTÓRICO'],[],['Data','Seção','Categoria','Atividade','Qtd.','Unid.','Usuário','Observações','Foto?'],...rFilt.map(r=>{const sec=getSec(r.secaoId);const cat=getCat(sec,r.catId);const ci=catInfo(cat?.tipo);const info=getAtv(r.atvId);return[fmtD(r.data),sec?'Seção '+sec.cod:'?',ci.label,info.nome,r.qtd,info.unid,r.usuario||'',r.obs||'',r.foto?'Sim':'Não'];})]);
   ws2['!cols']=[{wch:12},{wch:10},{wch:16},{wch:28},{wch:10},{wch:7},{wch:14},{wch:36},{wch:6}];XLSX.utils.book_append_sheet(wb,ws2,'Histórico');
-  const dI=(document.getElementById('relDI')?.value)||'';
-  const dF=(document.getElementById('relDF')?.value)||'';
-  const periodoXls=dI&&dF?`_${fmtD(dI).replace(/\//g,'-')}_a_${fmtD(dF).replace(/\//g,'-')}`:dI?`_a_partir_${fmtD(dI).replace(/\//g,'-')}`:dF?`_ate_${fmtD(dF).replace(/\//g,'-')}`:'';
-  XLSX.writeFile(wb,`Relatório de Avanço${periodoXls}.xlsx`);toast('Excel gerado! ✓');
+  XLSX.writeFile(wb,`InfraLog_${(cfg.nome||'Obra').replace(/\s/g,'_')}_${hoje()}.xlsx`);toast('Excel gerado! ✓');
 };
 
 window.exportPDF=function(){
@@ -1010,15 +923,13 @@ window.exportPDF=function(){
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:10.5px;color:#0a1020;}.hd{background:#0a1020;color:#fff;padding:18px 22px;}.hd h1{font-size:18px;color:#00d4ff;font-weight:900;margin-bottom:3px;}.hd .sub{font-size:9.5px;color:#6b8aa0;}.pg{padding:16px 22px;}.meta{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:14px;}.mb{background:#f0f4f8;border-radius:5px;padding:9px 11px;border-left:3px solid #00d4ff;}.mb .l{font-size:8px;color:#888;text-transform:uppercase;}.mb .v{font-size:14px;font-weight:800;margin-top:2px;}h2{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#555;border-bottom:2px solid #00d4ff;padding-bottom:4px;margin:14px 0 9px;}table{width:100%;border-collapse:collapse;font-size:9.5px;margin-bottom:5px;}th{background:#0a1020;color:#fff;padding:6px 7px;text-align:left;font-size:8.5px;}td{padding:5px 7px;border-bottom:1px solid #e8eef4;}tr:nth-child(even) td{background:#f8fafc;}.badge{display:inline-block;background:#00d4ff;color:#000;font-weight:800;border-radius:4px;padding:1px 6px;font-size:8px;}.ft{margin-top:14px;padding:9px 22px;background:#f0f4f8;font-size:8px;color:#888;text-align:center;border-top:1px solid #dde4ed;}.foto-pdf{width:80px;height:60px;object-fit:cover;border-radius:4px;vertical-align:middle;}@media print{@page{margin:10mm;}}</style></head><body>
 <div class="hd"><h1>InfraLog — Relatório de Avanço</h1><div style="font-size:14px;color:#ccc;font-weight:700;margin-bottom:4px">${cfg.nome||'Obra'}</div><div class="sub">${cfg.contrato?'Contrato: '+cfg.contrato+' · ':''}Responsável: ${cfg.resp||'—'} · Emitido: ${fmtD(hoje())}</div></div>
 <div class="pg"><div class="meta"><div class="mb"><div class="l">Avanço Geral</div><div class="v" style="color:#0099cc">${pct(eG,tG)}%</div></div><div class="mb"><div class="l">Seções</div><div class="v">${secoes.length}</div></div><div class="mb"><div class="l">Lançamentos</div><div class="v">${regs.length}</div></div><div class="mb"><div class="l">Data</div><div class="v" style="font-size:10px">${fmtD(hoje())}</div></div></div>
+<h2>Por Categoria</h2><table><thead><tr><th>Categoria</th><th>Previsto</th><th>Executado</th><th>%</th></tr></thead><tbody>${Object.entries(byCat).filter(([,v])=>v.tot>0).map(([tipo,v])=>{const p=pct(v.exec,v.tot);const cor=p>=100?'#16a34a':p>=50?'#d97706':'#2563eb';return`<tr><td><b>${v.label}</b></td><td>${nF(v.tot)}</td><td style="color:#16a34a;font-weight:700">${nF(v.exec)}</td><td style="color:${cor};font-weight:700">${p}%</td></tr>`;}).join('')}</tbody></table>
 <h2>Detalhamento Seção / Categoria / Atividade</h2><table><thead><tr><th>Seção</th><th>Categoria</th><th>Atividade</th><th>Unid.</th><th>Previsto</th><th>Executado</th><th>Saldo</th><th>%</th></tr></thead><tbody>${rows.map(r=>{const cor=r.pct>=100?'#16a34a':r.pct>=50?'#d97706':'#2563eb';return`<tr><td><span class="badge">${r.secao.replace('Seção ','')}</span></td><td>${r.categoria}${r.catObs?' ('+r.catObs+')':''}</td><td>${r.atividade}</td><td>${r.unid}</td><td>${nF(r.prev)}</td><td style="color:#16a34a;font-weight:700">${nF(r.exec)}</td><td>${nF(r.saldo)}</td><td style="color:${cor};font-weight:700">${r.pct}%</td></tr>`;}).join('')}</tbody></table>
 <h2>Histórico com Fotos (${rFilt.length} lançamentos)</h2><table><thead><tr><th>Data</th><th>Seção</th><th>Categoria</th><th>Atividade</th><th>Qtd.</th><th>Usuário</th><th>Obs.</th><th>Foto</th></tr></thead><tbody>${rFilt.map(r=>{const sec=getSec(r.secaoId);const cat=getCat(sec,r.catId);const ci=catInfo(cat?.tipo);const info=getAtv(r.atvId);return`<tr><td>${fmtD(r.data)}</td><td>${sec?'Seção '+sec.cod:'?'}</td><td>${ci.label}</td><td>${info.nome}</td><td style="font-weight:700">${nF(r.qtd)} ${info.unid}</td><td style="color:#2563eb">${r.usuario||'—'}</td><td style="color:#888">${r.obs||'—'}</td><td>${r.foto?`<img src="${r.foto}" class="foto-pdf">`:'-'}</td></tr>`;}).join('')}</tbody></table>
 </div><div class="ft">InfraLog · ${cfg.nome||''} · ${cfg.resp||''} · ${new Date().toLocaleString('pt-BR')}</div></body></html>`;
-  const dIpdf=(document.getElementById('relDI')?.value)||'';
-  const dFpdf=(document.getElementById('relDF')?.value)||'';
-  const periodoPdf=dIpdf&&dFpdf?`_${fmtD(dIpdf).replace(/\//g,'-')}_a_${fmtD(dFpdf).replace(/\//g,'-')}`:dIpdf?`_a_partir_${fmtD(dIpdf).replace(/\//g,'-')}`:dFpdf?`_ate_${fmtD(dFpdf).replace(/\//g,'-')}`:'';
   const blob=new Blob([html],{type:'text/html'});const url=URL.createObjectURL(blob);
   const w=window.open(url,'_blank');if(w)setTimeout(()=>w.print(),800);
-  else{const a=document.createElement('a');a.href=url;a.download=`Relatório de Avanço${periodoPdf}.html`;a.click();}
+  else{const a=document.createElement('a');a.href=url;a.download=`InfraLog_${hoje()}.html`;a.click();}
   toast('PDF aberto — Imprimir → Salvar como PDF ✓');
 };
 
