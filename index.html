@@ -527,6 +527,18 @@ select option{background:var(--surface);}
 </div>
 
 
+<script>
+// Safety net: se o módulo principal não carregar em 10s, esconde o loading e mostra aviso
+window._ilSafety=setTimeout(function(){
+  var ls=document.getElementById('loadingScreen');
+  if(ls&&!ls.classList.contains('hidden')){
+    ls.classList.add('hidden');
+    var mu=document.getElementById('modalUser');
+    if(mu)mu.classList.add('open');
+    console.warn('InfraLog: Firebase demorou demais - verifique sua conexão');
+  }
+},10000);
+</script>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
 import{getFirestore,doc,setDoc,updateDoc,addDoc,deleteDoc,getDocs,collection,onSnapshot,query,orderBy,serverTimestamp,writeBatch}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
@@ -744,6 +756,7 @@ window.confirmarUsuario=function(){
   document.getElementById('loadingScreen').classList.add('hidden');
   startListeners();
 };
+clearTimeout(window._ilSafety); // módulo carregou com sucesso
 const saved=localStorage.getItem('ilUser');
 if(saved){currentUser=saved;document.getElementById('modalUser').classList.remove('open');document.getElementById('userLabel').textContent='👷 '+saved;document.getElementById('appShell').style.display='block';document.getElementById('loadingScreen').classList.add('hidden');startListeners();}
 else{document.getElementById('loadingScreen').classList.add('hidden');document.getElementById('modalUser').classList.add('open');}
