@@ -177,6 +177,9 @@ select option{background:var(--surface);}
 .foto-modal.open{display:flex;}
 .foto-modal img{max-width:95vw;max-height:90vh;border-radius:10px;object-fit:contain;}
 .foto-modal-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:1.2rem;width:36px;height:36px;border-radius:50%;cursor:pointer;}
+.foto-btn-row{display:flex;gap:8px;}
+.foto-btn{flex:1;padding:14px 8px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);border-radius:10px;font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;}
+.foto-btn:active{background:var(--accent2);color:#fff;border-color:var(--accent2);}
 
 /* ── LOADING ── */
 .loading-screen{position:fixed;inset:0;background:linear-gradient(135deg,#006699,#003d5c);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;}
@@ -313,11 +316,13 @@ select option{background:var(--surface);}
       <div class="form-group"><label class="form-label">Observações (opcional)</label><textarea id="rObs" rows="2" placeholder="Ex: Chuva à tarde, solo mole..."></textarea></div>
       <div class="form-group">
         <label class="form-label">📷 Foto (opcional)</label>
-        <div class="foto-upload-area" id="fotoAreaLancar">
-          <input type="file" id="fotoInputLancar" accept="image/*" onchange="previewFoto('Lancar')">
-          <div id="fotoPlaceholderLancar"><div style="font-size:1.6rem;margin-bottom:4px">📷</div><div style="font-size:0.72rem;color:var(--muted)">Toque para tirar ou escolher foto</div></div>
-          <img id="fotoPreviewLancar" class="foto-preview">
+        <div class="foto-btn-row" id="fotoBtnsLancar">
+          <button type="button" class="foto-btn" onclick="document.getElementById('fotoInputLancar').click()">📷 Câmera</button>
+          <button type="button" class="foto-btn" onclick="document.getElementById('fotoInputLancarGal').click()">🖼 Galeria</button>
         </div>
+        <input type="file" id="fotoInputLancar" accept="image/*" capture="environment" onchange="previewFoto('Lancar',this)" style="display:none">
+        <input type="file" id="fotoInputLancarGal" accept="image/*" onchange="previewFoto('Lancar',this)" style="display:none">
+        <img id="fotoPreviewLancar" class="foto-preview" style="margin-top:8px">
         <button id="btnRemFotoLancar" style="display:none;margin-top:6px;font-size:0.7rem;background:none;border:none;color:var(--danger);cursor:pointer" onclick="removerFoto('Lancar')">✕ Remover foto</button>
       </div>
       <button class="btn-primary" onclick="lancar()">✓ REGISTRAR EXECUÇÃO</button>
@@ -520,11 +525,13 @@ select option{background:var(--surface);}
     <div class="form-group"><label class="form-label">Obs</label><textarea id="mlObs" rows="2" placeholder="Observações..."></textarea></div>
     <div class="form-group">
       <label class="form-label">📷 Foto (opcional)</label>
-      <div class="foto-upload-area">
-        <input type="file" id="fotoInputModal" accept="image/*" onchange="previewFoto('Modal')">
-        <div id="fotoPlaceholderModal"><div style="font-size:1.4rem;margin-bottom:4px">📷</div><div style="font-size:0.7rem;color:var(--muted)">Toque para foto</div></div>
-        <img id="fotoPreviewModal" class="foto-preview">
+      <div class="foto-btn-row" id="fotoBtnsModal">
+        <button type="button" class="foto-btn" onclick="document.getElementById('fotoInputModal').click()">📷 Câmera</button>
+        <button type="button" class="foto-btn" onclick="document.getElementById('fotoInputModalGal').click()">🖼 Galeria</button>
       </div>
+      <input type="file" id="fotoInputModal" accept="image/*" capture="environment" onchange="previewFoto('Modal',this)" style="display:none">
+      <input type="file" id="fotoInputModalGal" accept="image/*" onchange="previewFoto('Modal',this)" style="display:none">
+      <img id="fotoPreviewModal" class="foto-preview" style="margin-top:8px">
       <button id="btnRemFotoModal" style="display:none;margin-top:6px;font-size:0.7rem;background:none;border:none;color:var(--danger);cursor:pointer" onclick="removerFoto('Modal')">✕ Remover foto</button>
     </div>
     <button class="btn-primary" onclick="confirmarModal()">✓ REGISTRAR</button>
@@ -701,8 +708,8 @@ function renderCurrent(){
 }
 
 // ── FOTO: COMPRESS + PREVIEW ──
-window.previewFoto=function(ctx){
-  const input=document.getElementById('fotoInput'+ctx);
+window.previewFoto=function(ctx,inputEl){
+  const input=inputEl||document.getElementById('fotoInput'+ctx);
   const file=input.files[0];if(!file)return;
   const prog=document.getElementById('uploadProgress'+ctx);
   const bar=document.getElementById('uploadBar'+ctx);
@@ -723,10 +730,10 @@ window.previewFoto=function(ctx){
       if(ctx==='Lancar')fotoDataLancar=compressed;
       else fotoDataModal=compressed;
       const preview=document.getElementById('fotoPreview'+ctx);
-      const placeholder=document.getElementById('fotoPlaceholder'+ctx);
+      const btns=document.getElementById('fotoBtns'+ctx);
       const btnRem=document.getElementById('btnRemFoto'+ctx);
       preview.src=compressed;preview.style.display='block';
-      if(placeholder)placeholder.style.display='none';
+      if(btns)btns.style.display='none';
       if(btnRem)btnRem.style.display='block';
       if(bar)bar.style.width='100%';
       setTimeout(()=>{if(prog)prog.classList.remove('show');},600);
@@ -738,13 +745,12 @@ window.previewFoto=function(ctx){
 window.removerFoto=function(ctx){
   if(ctx==='Lancar')fotoDataLancar=null;else fotoDataModal=null;
   const preview=document.getElementById('fotoPreview'+ctx);
-  const placeholder=document.getElementById('fotoPlaceholder'+ctx);
+  const btns=document.getElementById('fotoBtns'+ctx);
   const btnRem=document.getElementById('btnRemFoto'+ctx);
-  const input=document.getElementById('fotoInput'+ctx);
   preview.style.display='none';preview.src='';
-  if(placeholder)placeholder.style.display='block';
+  if(btns)btns.style.display='flex';
   if(btnRem)btnRem.style.display='none';
-  if(input)input.value='';
+  ['','Gal'].forEach(suf=>{const i=document.getElementById('fotoInput'+ctx+suf);if(i)i.value='';});
 };
 window.verFoto=function(src){
   document.getElementById('fotoModalImg').src=src;
