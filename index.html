@@ -177,9 +177,6 @@ select option{background:var(--surface);}
 .foto-modal.open{display:flex;}
 .foto-modal img{max-width:95vw;max-height:90vh;border-radius:10px;object-fit:contain;}
 .foto-modal-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:1.2rem;width:36px;height:36px;border-radius:50%;cursor:pointer;}
-.foto-btn-row{display:flex;gap:8px;}
-.foto-btn{flex:1;padding:14px 8px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);border-radius:10px;font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;}
-.foto-btn:active{background:var(--accent2);color:#fff;border-color:var(--accent2);}
 
 /* ── LOADING ── */
 .loading-screen{position:fixed;inset:0;background:linear-gradient(135deg,#006699,#003d5c);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;}
@@ -316,13 +313,11 @@ select option{background:var(--surface);}
       <div class="form-group"><label class="form-label">Observações (opcional)</label><textarea id="rObs" rows="2" placeholder="Ex: Chuva à tarde, solo mole..."></textarea></div>
       <div class="form-group">
         <label class="form-label">📷 Foto (opcional)</label>
-        <div class="foto-btn-row" id="fotoBtnsLancar">
-          <button type="button" class="foto-btn" onclick="document.getElementById('fotoInputLancar').click()">📷 Câmera</button>
-          <button type="button" class="foto-btn" onclick="document.getElementById('fotoInputLancarGal').click()">🖼 Galeria</button>
+        <div class="foto-upload-area" id="fotoAreaLancar">
+          <input type="file" id="fotoInputLancar" accept="image/*" capture="environment" onchange="previewFoto('Lancar')">
+          <div id="fotoPlaceholderLancar"><div style="font-size:1.6rem;margin-bottom:4px">📷</div><div style="font-size:0.72rem;color:var(--muted)">Toque para tirar ou escolher foto</div></div>
+          <img id="fotoPreviewLancar" class="foto-preview">
         </div>
-        <input type="file" id="fotoInputLancar" accept="image/*" capture="environment" onchange="previewFoto('Lancar',this)" style="display:none">
-        <input type="file" id="fotoInputLancarGal" accept="image/*" onchange="previewFoto('Lancar',this)" style="display:none">
-        <img id="fotoPreviewLancar" class="foto-preview" style="margin-top:8px">
         <button id="btnRemFotoLancar" style="display:none;margin-top:6px;font-size:0.7rem;background:none;border:none;color:var(--danger);cursor:pointer" onclick="removerFoto('Lancar')">✕ Remover foto</button>
       </div>
       <button class="btn-primary" onclick="lancar()">✓ REGISTRAR EXECUÇÃO</button>
@@ -525,13 +520,11 @@ select option{background:var(--surface);}
     <div class="form-group"><label class="form-label">Obs</label><textarea id="mlObs" rows="2" placeholder="Observações..."></textarea></div>
     <div class="form-group">
       <label class="form-label">📷 Foto (opcional)</label>
-      <div class="foto-btn-row" id="fotoBtnsModal">
-        <button type="button" class="foto-btn" onclick="document.getElementById('fotoInputModal').click()">📷 Câmera</button>
-        <button type="button" class="foto-btn" onclick="document.getElementById('fotoInputModalGal').click()">🖼 Galeria</button>
+      <div class="foto-upload-area">
+        <input type="file" id="fotoInputModal" accept="image/*" capture="environment" onchange="previewFoto('Modal')">
+        <div id="fotoPlaceholderModal"><div style="font-size:1.4rem;margin-bottom:4px">📷</div><div style="font-size:0.7rem;color:var(--muted)">Toque para foto</div></div>
+        <img id="fotoPreviewModal" class="foto-preview">
       </div>
-      <input type="file" id="fotoInputModal" accept="image/*" capture="environment" onchange="previewFoto('Modal',this)" style="display:none">
-      <input type="file" id="fotoInputModalGal" accept="image/*" onchange="previewFoto('Modal',this)" style="display:none">
-      <img id="fotoPreviewModal" class="foto-preview" style="margin-top:8px">
       <button id="btnRemFotoModal" style="display:none;margin-top:6px;font-size:0.7rem;background:none;border:none;color:var(--danger);cursor:pointer" onclick="removerFoto('Modal')">✕ Remover foto</button>
     </div>
     <button class="btn-primary" onclick="confirmarModal()">✓ REGISTRAR</button>
@@ -708,8 +701,8 @@ function renderCurrent(){
 }
 
 // ── FOTO: COMPRESS + PREVIEW ──
-window.previewFoto=function(ctx,inputEl){
-  const input=inputEl||document.getElementById('fotoInput'+ctx);
+window.previewFoto=function(ctx){
+  const input=document.getElementById('fotoInput'+ctx);
   const file=input.files[0];if(!file)return;
   const prog=document.getElementById('uploadProgress'+ctx);
   const bar=document.getElementById('uploadBar'+ctx);
@@ -730,10 +723,10 @@ window.previewFoto=function(ctx,inputEl){
       if(ctx==='Lancar')fotoDataLancar=compressed;
       else fotoDataModal=compressed;
       const preview=document.getElementById('fotoPreview'+ctx);
-      const btns=document.getElementById('fotoBtns'+ctx);
+      const placeholder=document.getElementById('fotoPlaceholder'+ctx);
       const btnRem=document.getElementById('btnRemFoto'+ctx);
       preview.src=compressed;preview.style.display='block';
-      if(btns)btns.style.display='none';
+      if(placeholder)placeholder.style.display='none';
       if(btnRem)btnRem.style.display='block';
       if(bar)bar.style.width='100%';
       setTimeout(()=>{if(prog)prog.classList.remove('show');},600);
@@ -745,12 +738,13 @@ window.previewFoto=function(ctx,inputEl){
 window.removerFoto=function(ctx){
   if(ctx==='Lancar')fotoDataLancar=null;else fotoDataModal=null;
   const preview=document.getElementById('fotoPreview'+ctx);
-  const btns=document.getElementById('fotoBtns'+ctx);
+  const placeholder=document.getElementById('fotoPlaceholder'+ctx);
   const btnRem=document.getElementById('btnRemFoto'+ctx);
+  const input=document.getElementById('fotoInput'+ctx);
   preview.style.display='none';preview.src='';
-  if(btns)btns.style.display='flex';
+  if(placeholder)placeholder.style.display='block';
   if(btnRem)btnRem.style.display='none';
-  ['','Gal'].forEach(suf=>{const i=document.getElementById('fotoInput'+ctx+suf);if(i)i.value='';});
+  if(input)input.value='';
 };
 window.verFoto=function(src){
   document.getElementById('fotoModalImg').src=src;
@@ -1287,4 +1281,235 @@ window.salvarCfg=async function(){
   catch(e){alert('Erro: '+e.message);}
 };
 window.resetTudo=async function(){
-  if(!confirm('Apagar TODOS
+  if(!confirm('Apagar TODOS os registros?'))return;if(!confirm('Confirmar? Não tem volta.'))return;
+  setSS('syncing');
+  const snap=await getDocs(collection(db,'registros'));const batch=writeBatch(db);snap.docs.forEach(d=>batch.delete(d.ref));await batch.commit();
+  toast('Registros apagados. ✓');setSS('online');
+};
+function renderCfg(){
+  document.getElementById('cNome').value=cfg.nome||'';
+  document.getElementById('cResp').value=cfg.resp||'';
+  document.getElementById('cContrato').value=cfg.contrato||'';
+  unidSel='';iconSel='';iconSelEdit='';
+  document.querySelectorAll('#unidChips .chip').forEach(c=>c.classList.remove('selected'));
+  document.querySelectorAll('#iconChips .chip').forEach(c=>c.classList.remove('selected'));
+  if(document.getElementById('nsNome'))document.getElementById('nsNome').value='';
+  if(document.getElementById('nsUnid'))document.getElementById('nsUnid').value='';
+  if(document.getElementById('ncNome'))document.getElementById('ncNome').value='';
+  renderListaAtv();
+  renderListaCat();
+  if(document.getElementById('sCod'))document.getElementById('sCod').value='';
+  if(document.getElementById('sDesc'))document.getElementById('sDesc').value='';
+  if(document.getElementById('catEntries'))document.getElementById('catEntries').innerHTML='';
+  renderCfgSecList();
+}
+
+// ── CATEGORIAS ──
+function renderListaCat(){
+  const el=document.getElementById('listaCategorias');
+  if(!el)return;
+  const todas=todasCat();
+  if(!todas.length){el.innerHTML='<div style="color:var(--muted);font-size:0.78rem;padding:8px 0">Nenhuma categoria ainda.</div>';return;}
+  el.innerHTML=todas.map(c=>{
+    const isExt=catExt.find(x=>x.tipo===c.tipo);
+    const isPad=CAT_PAD.some(p=>p.tipo===c.tipo);
+    return`<div class="atv-edit-row">
+      <span style="font-size:1rem">${c.icon}</span>
+      <div style="flex:1;margin-left:8px"><span style="font-size:0.8rem;font-weight:600">${c.label}</span>
+        ${isPad?'<span style="font-size:0.58rem;color:var(--muted);margin-left:6px">padrão</span>':'<span style="font-size:0.58rem;color:var(--accent2);margin-left:6px">✦ sua</span>'}
+      </div>
+      <div style="display:flex;gap:5px">
+        <button class="btn-sm-accent" onclick="abrirEditCat('${c.tipo}')">✏️</button>
+        ${isExt?`<button class="btn-sm-danger" onclick="delCategoria('${isExt._docId}')">🗑</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+window.selIcon=function(el,icon){
+  document.querySelectorAll('#iconChips .chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');iconSel=icon;
+};
+window.selIconEdit=function(el,icon){
+  document.querySelectorAll('#editIconChips .chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');iconSelEdit=icon;
+};
+window.addCategoria=async function(){
+  const nome=document.getElementById('ncNome').value.trim();
+  const icon=iconSel||'⚙️';
+  if(!nome){alert('Informe o nome da categoria.');return;}
+  const tipo='cat_'+Date.now();
+  setSS('syncing');
+  try{
+    await addDoc(collection(db,'categorias'),{tipo,label:nome,icon,cls:'cat-b-cyan'});
+    document.getElementById('ncNome').value='';
+    iconSel='';
+    document.querySelectorAll('#iconChips .chip').forEach(c=>c.classList.remove('selected'));
+    toast('Categoria "'+nome+'" criada! ✓');setSS('online');
+  }catch(e){alert('Erro: '+e.message);}
+};
+window.abrirEditCat=function(tipo){
+  const c=catInfo(tipo);
+  const isExt=catExt.find(x=>x.tipo===tipo);
+  editCatCtx={tipo,isExt};
+  document.getElementById('editCatSub').textContent=isExt?'Categoria personalizada':'Categoria padrão';
+  document.getElementById('editCatNome').value=c.label;
+  iconSelEdit=c.icon;
+  document.querySelectorAll('#editIconChips .chip').forEach(ch=>{
+    ch.classList.toggle('selected',ch.textContent.trim()===c.icon);
+  });
+  document.getElementById('modalEditCat').classList.add('open');
+};
+window.salvarEdicaoCat=async function(){
+  if(!editCatCtx)return;
+  const label=document.getElementById('editCatNome').value.trim();
+  const icon=iconSelEdit||'⚙️';
+  if(!label){alert('Informe o nome.');return;}
+  setSS('syncing');
+  try{
+    if(editCatCtx.isExt){
+      await updateDoc(doc(db,'categorias',editCatCtx.isExt._docId),{label,icon});
+    } else {
+      const existing=catExt.find(c=>c.tipo===editCatCtx.tipo);
+      if(existing){await updateDoc(doc(db,'categorias',existing._docId),{label,icon});}
+      else{await addDoc(collection(db,'categorias'),{tipo:editCatCtx.tipo,label,icon,cls:'cat-b-cyan'});}
+    }
+    closeModal('modalEditCat');toast('Categoria atualizada! ✓');setSS('online');
+  }catch(e){alert('Erro: '+e.message);}
+};
+window.delCategoria=async function(docId){
+  if(!confirm('Remover esta categoria?'))return;
+  setSS('syncing');
+  await deleteDoc(doc(db,'categorias',docId));
+  setSS('online');toast('Removida.');
+};
+
+
+// ── NOTAS / CHECKLIST ──
+window.subNavNotas=function(n){
+  subPanelNotas=n;
+  document.getElementById('subTabChk').classList.toggle('active',n==='chk');
+  document.getElementById('subTabNota').classList.toggle('active',n==='nota');
+  document.getElementById('subPanelChk').classList.toggle('active',n==='chk');
+  document.getElementById('subPanelNota').classList.toggle('active',n==='nota');
+};
+
+function renderNotas(){
+  // Preencher selects de seções
+  const secOpts='<option value="">Sem seção</option>'+secoes.map(s=>`<option value="${s.id}">${s.cod} — ${s.desc||''}</option>`).join('');
+  ['chkSec','notaSec'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    const cur=el.value;el.innerHTML=secOpts;el.value=cur;
+  });
+
+  // Estatísticas checklist
+  const tot=checklistItems.length;
+  const feitos=checklistItems.filter(c=>c.done).length;
+  const pend=tot-feitos;
+  document.getElementById('chkStats').innerHTML=`
+    <div class="chk-stat-pill"><div class="chk-stat-num" style="color:var(--accent2)">${tot}</div><div class="chk-stat-lbl">Total</div></div>
+    <div class="chk-stat-pill"><div class="chk-stat-num" style="color:var(--orange)">${pend}</div><div class="chk-stat-lbl">Pendentes</div></div>
+    <div class="chk-stat-pill"><div class="chk-stat-num" style="color:var(--green)">${feitos}</div><div class="chk-stat-lbl">Feitas</div></div>`;
+
+  // Lista checklist
+  const filtro=document.getElementById('chkFiltro')?.value||'todos';
+  let lista=checklistItems.slice();
+  if(filtro==='pend')lista=lista.filter(c=>!c.done);
+  else if(filtro==='feito')lista=lista.filter(c=>c.done);
+  // Pendentes primeiro, depois por data desc
+  lista.sort((a,b)=>{
+    if(!!a.done!==!!b.done)return a.done?1:-1;
+    return (b.ts?.seconds||0)-(a.ts?.seconds||0);
+  });
+  const chkList=document.getElementById('chkList');
+  if(!lista.length){
+    chkList.innerHTML=`<div class="empty"><div class="empty-icon">☑</div><div class="empty-text">Nenhuma tarefa${filtro!=='todos'?' neste filtro':''}.<br>Adicione a primeira acima.</div></div>`;
+  } else {
+    chkList.innerHTML=lista.map(c=>{
+      const sec=c.secaoId?getSec(c.secaoId):null;
+      const secTag=sec?`<span class="tag">📍 ${sec.cod}</span>`:'';
+      const autor=c.user?`<span class="tag">👷 ${c.user}</span>`:'';
+      const data=c.ts?.seconds?new Date(c.ts.seconds*1000).toLocaleDateString('pt-BR'):'';
+      return `<div class="chk-item ${c.done?'done':''}">
+        <div class="chk-check" onclick="toggleChk('${c._docId}',${!c.done})">${c.done?'✓':''}</div>
+        <div class="chk-body">
+          <div class="chk-text">${escapeHtml(c.texto||'')}</div>
+          <div class="chk-meta">${data} ${secTag} ${autor}</div>
+        </div>
+        <button class="chk-del" onclick="delChk('${c._docId}')">🗑</button>
+      </div>`;
+    }).join('');
+  }
+
+  // Lista anotações
+  const notaList=document.getElementById('notaList');
+  if(!notas.length){
+    notaList.innerHTML=`<div class="empty"><div class="empty-icon">📝</div><div class="empty-text">Nenhuma anotação ainda.<br>Crie a primeira acima.</div></div>`;
+  } else {
+    notaList.innerHTML=notas.map(n=>{
+      const sec=n.secaoId?getSec(n.secaoId):null;
+      const secTag=sec?`<span class="tag">📍 ${sec.cod}</span>`:'';
+      const autor=n.user?`<span class="tag">👷 ${n.user}</span>`:'';
+      const data=n.ts?.seconds?new Date(n.ts.seconds*1000).toLocaleString('pt-BR'):'';
+      return `<div class="nota-item">
+        <div class="nota-text">${escapeHtml(n.texto||'')}</div>
+        <div class="nota-footer">
+          <div class="nota-meta">${data} ${secTag} ${autor}</div>
+          <div class="nota-actions">
+            <button class="btn-sm-danger" onclick="delNota('${n._docId}')">🗑</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+window.renderNotas=renderNotas;
+
+function escapeHtml(s){return (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
+window.addChecklist=async function(){
+  const texto=document.getElementById('chkInput').value.trim();
+  if(!texto){alert('Escreva a tarefa.');return;}
+  const secaoId=document.getElementById('chkSec').value||null;
+  setSS('syncing');
+  try{
+    await addDoc(collection(db,'checklist'),{texto,secaoId,done:false,user:currentUser,ts:serverTimestamp()});
+    document.getElementById('chkInput').value='';
+    document.getElementById('chkSec').value='';
+    toast('Tarefa adicionada ✓');setSS('online');
+  }catch(e){alert('Erro: '+e.message);}
+};
+window.toggleChk=async function(id,val){
+  setSS('syncing');
+  try{await updateDoc(doc(db,'checklist',id),{done:val});setSS('online');}
+  catch(e){alert('Erro: '+e.message);}
+};
+window.delChk=async function(id){
+  if(!confirm('Remover esta tarefa?'))return;
+  setSS('syncing');
+  try{await deleteDoc(doc(db,'checklist',id));setSS('online');toast('Tarefa removida.');}
+  catch(e){alert('Erro: '+e.message);}
+};
+
+window.addNota=async function(){
+  const texto=document.getElementById('notaInput').value.trim();
+  if(!texto){alert('Escreva a anotação.');return;}
+  const secaoId=document.getElementById('notaSec').value||null;
+  setSS('syncing');
+  try{
+    await addDoc(collection(db,'notas'),{texto,secaoId,user:currentUser,ts:serverTimestamp()});
+    document.getElementById('notaInput').value='';
+    document.getElementById('notaSec').value='';
+    toast('Anotação salva ✓');setSS('online');
+  }catch(e){alert('Erro: '+e.message);}
+};
+window.delNota=async function(id){
+  if(!confirm('Remover esta anotação?'))return;
+  setSS('syncing');
+  try{await deleteDoc(doc(db,'notas',id));setSS('online');toast('Anotação removida.');}
+  catch(e){alert('Erro: '+e.message);}
+};
+
+window.toast=function(msg){const t=document.createElement('div');t.style.cssText='position:fixed;bottom:94px;left:50%;transform:translateX(-50%);background:#4ade80;color:#000;font-weight:700;padding:11px 22px;border-radius:30px;font-size:0.82rem;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:fadeUp .3s ease;white-space:nowrap';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500);};
+</script>
+</body>
+</html>
