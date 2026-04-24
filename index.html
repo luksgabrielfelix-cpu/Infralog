@@ -185,6 +185,34 @@ select option{background:var(--surface);}
 @keyframes spin{to{transform:rotate(360deg);}}
 @keyframes fadeUp{from{opacity:0;transform:translate(-50%,10px);}to{opacity:1;transform:translate(-50%,0);}}
 
+/* ── NOTAS / CHECKLIST ── */
+.sub-tabs{display:flex;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:14px;}
+.sub-tab{flex:1;padding:9px 8px;border:none;background:transparent;color:var(--muted);font-family:'Syne',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;border-radius:8px;cursor:pointer;transition:all .2s;}
+.sub-tab.active{background:var(--surface);color:var(--accent2);box-shadow:var(--shadow);}
+.sub-panel{display:none;}.sub-panel.active{display:block;}
+
+.chk-item{display:flex;align-items:flex-start;gap:10px;padding:11px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;box-shadow:var(--shadow);transition:all .2s;}
+.chk-item.done{background:var(--green-light);border-color:#86efac;}
+.chk-check{flex-shrink:0;width:22px;height:22px;border:2px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.95rem;font-weight:800;color:#fff;transition:all .15s;margin-top:1px;}
+.chk-item.done .chk-check{background:var(--green);border-color:var(--green);}
+.chk-body{flex:1;min-width:0;}
+.chk-text{font-size:0.84rem;color:var(--text);line-height:1.35;word-wrap:break-word;}
+.chk-item.done .chk-text{text-decoration:line-through;color:var(--muted);}
+.chk-meta{font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--muted);margin-top:3px;}
+.chk-del{flex-shrink:0;background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem;padding:4px 6px;border-radius:6px;}
+.chk-del:active{background:var(--danger-light);color:var(--danger);}
+
+.nota-item{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:10px;padding:12px 13px;margin-bottom:10px;box-shadow:var(--shadow);}
+.nota-text{font-size:0.84rem;color:var(--text);line-height:1.5;white-space:pre-wrap;word-wrap:break-word;}
+.nota-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);}
+.nota-meta{font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--muted);}
+.nota-actions{display:flex;gap:5px;}
+
+.chk-stats{display:flex;gap:8px;margin-bottom:12px;}
+.chk-stat-pill{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 10px;text-align:center;box-shadow:var(--shadow);}
+.chk-stat-num{font-size:1.1rem;font-weight:800;line-height:1;}
+.chk-stat-lbl{font-size:0.55rem;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-top:3px;}
+
 /* ── RELATÓRIO PRÉVIA ── */
 .rel-table{width:100%;border-collapse:collapse;font-size:0.72rem;}
 .rel-table th{background:var(--surface2);padding:7px 8px;text-align:left;border-bottom:2px solid var(--border);color:var(--muted);font-size:0.6rem;letter-spacing:.8px;text-transform:uppercase;}
@@ -432,6 +460,44 @@ select option{background:var(--surface);}
   </div>
 </div><!-- fim appShell -->
 
+  <!-- NOTAS / CHECKLIST -->
+  <div id="page-notas" class="page">
+    <div class="sub-tabs">
+      <button class="sub-tab active" id="subTabChk" onclick="subNavNotas('chk')">☑ Checklist</button>
+      <button class="sub-tab" id="subTabNota" onclick="subNavNotas('nota')">📝 Anotações</button>
+    </div>
+
+    <!-- Painel CHECKLIST -->
+    <div class="sub-panel active" id="subPanelChk">
+      <div class="chk-stats" id="chkStats"></div>
+      <div class="card">
+        <div class="card-title">Nova Tarefa</div>
+        <div class="form-group"><label class="form-label">Descrição</label><input type="text" id="chkInput" placeholder="Ex: Solicitar CBUQ para segunda-feira"></div>
+        <div class="form-group"><label class="form-label">Seção (opcional)</label><select id="chkSec"><option value="">Sem seção</option></select></div>
+        <button class="btn-primary" onclick="addChecklist()">+ Adicionar Tarefa</button>
+      </div>
+      <div class="card-title" style="margin-top:4px">Tarefas</div>
+      <div class="form-group" style="margin-bottom:10px"><select id="chkFiltro" onchange="renderNotas()">
+        <option value="todos">Todas</option>
+        <option value="pend">Pendentes</option>
+        <option value="feito">Concluídas</option>
+      </select></div>
+      <div id="chkList"></div>
+    </div>
+
+    <!-- Painel ANOTAÇÕES -->
+    <div class="sub-panel" id="subPanelNota">
+      <div class="card">
+        <div class="card-title">Nova Anotação</div>
+        <div class="form-group"><label class="form-label">Texto</label><textarea id="notaInput" rows="4" placeholder="Escreva suas observações, lembretes, pendências..."></textarea></div>
+        <div class="form-group"><label class="form-label">Seção (opcional)</label><select id="notaSec"><option value="">Sem seção</option></select></div>
+        <button class="btn-primary" onclick="addNota()">+ Salvar Anotação</button>
+      </div>
+      <div class="card-title" style="margin-top:4px">Anotações</div>
+      <div id="notaList"></div>
+    </div>
+  </div>
+
 <!-- BOTTOM TABS -->
 <div class="tabs">
   <button class="tab active" onclick="nav('dashboard')"><span class="tab-icon">📊</span><span>Visão</span><div class="tab-indicator"></div></button>
@@ -439,6 +505,7 @@ select option{background:var(--surface);}
   <button class="tab" onclick="nav('lancar')"><span class="tab-icon">✏️</span><span>Lançar</span><div class="tab-indicator"></div></button>
   <button class="tab" onclick="nav('historico')"><span class="tab-icon">🕓</span><span>Histórico</span><div class="tab-indicator"></div></button>
   <button class="tab" onclick="nav('relatorio')"><span class="tab-icon">📄</span><span>Relatório</span><div class="tab-indicator"></div></button>
+  <button class="tab" onclick="nav('notas')"><span class="tab-icon">📝</span><span>Notas</span><div class="tab-indicator"></div></button>
   <button class="tab" onclick="nav('config')"><span class="tab-icon">⚙️</span><span>Config</span><div class="tab-indicator"></div></button>
 </div>
 
@@ -550,6 +617,7 @@ let atvOverrides={};  // {id: {nome, unid}} para sobrescrever padrões
 let atvExt=[];        // atividades totalmente novas
 let catExt=[];        // categorias personalizadas
 let secoes=[],regs=[],mCtx=null,unidSel='',currentUser='',editSecCtx=null,editAtvCtx=null;
+let checklistItems=[],notas=[],subPanelNotas='chk';
 let fotoDataLancar=null,fotoDataModal=null;
 const sortAlpha=(arr,key='nome')=>arr.slice().sort((a,b)=>(a[key]||'').localeCompare(b[key]||'','pt-BR',{sensitivity:'base'}));
 
@@ -622,12 +690,14 @@ function startListeners(){
   onSnapshot(collection(db,'categorias'),snap=>{catExt=sortAlpha(snap.docs.map(d=>({...d.data(),_docId:d.id})),'label');renderCurrent();});
   onSnapshot(collection(db,'secoes'),snap=>{secoes=sortAlpha(snap.docs.map(d=>({...d.data(),id:d.id})),'cod');renderCurrent();});
   onSnapshot(query(collection(db,'registros'),orderBy('ts','desc')),snap=>{regs=snap.docs.map(d=>({...d.data(),_docId:d.id}));renderCurrent();setSS('online');});
+  onSnapshot(query(collection(db,'checklist'),orderBy('ts','desc')),snap=>{checklistItems=snap.docs.map(d=>({...d.data(),_docId:d.id}));renderCurrent();});
+  onSnapshot(query(collection(db,'notas'),orderBy('ts','desc')),snap=>{notas=snap.docs.map(d=>({...d.data(),_docId:d.id}));renderCurrent();});
 }
 
 function renderCurrent(){
   const a=document.querySelector('.page.active')?.id?.replace('page-','');
   if(a==='dashboard')renderDash();else if(a==='secoes')renderSecoes();else if(a==='lancar')renderLancar();
-  else if(a==='historico')renderHist();else if(a==='relatorio')renderRel();else if(a==='config')renderCfg();
+  else if(a==='historico')renderHist();else if(a==='relatorio')renderRel();else if(a==='notas')renderNotas();else if(a==='config')renderCfg();
 }
 
 // ── FOTO: COMPRESS + PREVIEW ──
@@ -706,7 +776,7 @@ window.nav=function(n){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+n).classList.add('active');
-  ['dashboard','secoes','lancar','historico','relatorio','config'].forEach((p,i)=>{if(p===n)document.querySelectorAll('.tab')[i].classList.add('active');});
+  ['dashboard','secoes','lancar','historico','relatorio','notas','config'].forEach((p,i)=>{if(p===n)document.querySelectorAll('.tab')[i].classList.add('active');});
   renderCurrent();
 };
 
@@ -1311,6 +1381,132 @@ window.delCategoria=async function(docId){
   setSS('syncing');
   await deleteDoc(doc(db,'categorias',docId));
   setSS('online');toast('Removida.');
+};
+
+
+// ── NOTAS / CHECKLIST ──
+window.subNavNotas=function(n){
+  subPanelNotas=n;
+  document.getElementById('subTabChk').classList.toggle('active',n==='chk');
+  document.getElementById('subTabNota').classList.toggle('active',n==='nota');
+  document.getElementById('subPanelChk').classList.toggle('active',n==='chk');
+  document.getElementById('subPanelNota').classList.toggle('active',n==='nota');
+};
+
+function renderNotas(){
+  // Preencher selects de seções
+  const secOpts='<option value="">Sem seção</option>'+secoes.map(s=>`<option value="${s.id}">${s.cod} — ${s.desc||''}</option>`).join('');
+  ['chkSec','notaSec'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    const cur=el.value;el.innerHTML=secOpts;el.value=cur;
+  });
+
+  // Estatísticas checklist
+  const tot=checklistItems.length;
+  const feitos=checklistItems.filter(c=>c.done).length;
+  const pend=tot-feitos;
+  document.getElementById('chkStats').innerHTML=`
+    <div class="chk-stat-pill"><div class="chk-stat-num" style="color:var(--accent2)">${tot}</div><div class="chk-stat-lbl">Total</div></div>
+    <div class="chk-stat-pill"><div class="chk-stat-num" style="color:var(--orange)">${pend}</div><div class="chk-stat-lbl">Pendentes</div></div>
+    <div class="chk-stat-pill"><div class="chk-stat-num" style="color:var(--green)">${feitos}</div><div class="chk-stat-lbl">Feitas</div></div>`;
+
+  // Lista checklist
+  const filtro=document.getElementById('chkFiltro')?.value||'todos';
+  let lista=checklistItems.slice();
+  if(filtro==='pend')lista=lista.filter(c=>!c.done);
+  else if(filtro==='feito')lista=lista.filter(c=>c.done);
+  // Pendentes primeiro, depois por data desc
+  lista.sort((a,b)=>{
+    if(!!a.done!==!!b.done)return a.done?1:-1;
+    return (b.ts?.seconds||0)-(a.ts?.seconds||0);
+  });
+  const chkList=document.getElementById('chkList');
+  if(!lista.length){
+    chkList.innerHTML=`<div class="empty"><div class="empty-icon">☑</div><div class="empty-text">Nenhuma tarefa${filtro!=='todos'?' neste filtro':''}.<br>Adicione a primeira acima.</div></div>`;
+  } else {
+    chkList.innerHTML=lista.map(c=>{
+      const sec=c.secaoId?getSec(c.secaoId):null;
+      const secTag=sec?`<span class="tag">📍 ${sec.cod}</span>`:'';
+      const autor=c.user?`<span class="tag">👷 ${c.user}</span>`:'';
+      const data=c.ts?.seconds?new Date(c.ts.seconds*1000).toLocaleDateString('pt-BR'):'';
+      return `<div class="chk-item ${c.done?'done':''}">
+        <div class="chk-check" onclick="toggleChk('${c._docId}',${!c.done})">${c.done?'✓':''}</div>
+        <div class="chk-body">
+          <div class="chk-text">${escapeHtml(c.texto||'')}</div>
+          <div class="chk-meta">${data} ${secTag} ${autor}</div>
+        </div>
+        <button class="chk-del" onclick="delChk('${c._docId}')">🗑</button>
+      </div>`;
+    }).join('');
+  }
+
+  // Lista anotações
+  const notaList=document.getElementById('notaList');
+  if(!notas.length){
+    notaList.innerHTML=`<div class="empty"><div class="empty-icon">📝</div><div class="empty-text">Nenhuma anotação ainda.<br>Crie a primeira acima.</div></div>`;
+  } else {
+    notaList.innerHTML=notas.map(n=>{
+      const sec=n.secaoId?getSec(n.secaoId):null;
+      const secTag=sec?`<span class="tag">📍 ${sec.cod}</span>`:'';
+      const autor=n.user?`<span class="tag">👷 ${n.user}</span>`:'';
+      const data=n.ts?.seconds?new Date(n.ts.seconds*1000).toLocaleString('pt-BR'):'';
+      return `<div class="nota-item">
+        <div class="nota-text">${escapeHtml(n.texto||'')}</div>
+        <div class="nota-footer">
+          <div class="nota-meta">${data} ${secTag} ${autor}</div>
+          <div class="nota-actions">
+            <button class="btn-sm-danger" onclick="delNota('${n._docId}')">🗑</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+window.renderNotas=renderNotas;
+
+function escapeHtml(s){return (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
+window.addChecklist=async function(){
+  const texto=document.getElementById('chkInput').value.trim();
+  if(!texto){alert('Escreva a tarefa.');return;}
+  const secaoId=document.getElementById('chkSec').value||null;
+  setSS('syncing');
+  try{
+    await addDoc(collection(db,'checklist'),{texto,secaoId,done:false,user:currentUser,ts:serverTimestamp()});
+    document.getElementById('chkInput').value='';
+    document.getElementById('chkSec').value='';
+    toast('Tarefa adicionada ✓');setSS('online');
+  }catch(e){alert('Erro: '+e.message);}
+};
+window.toggleChk=async function(id,val){
+  setSS('syncing');
+  try{await updateDoc(doc(db,'checklist',id),{done:val});setSS('online');}
+  catch(e){alert('Erro: '+e.message);}
+};
+window.delChk=async function(id){
+  if(!confirm('Remover esta tarefa?'))return;
+  setSS('syncing');
+  try{await deleteDoc(doc(db,'checklist',id));setSS('online');toast('Tarefa removida.');}
+  catch(e){alert('Erro: '+e.message);}
+};
+
+window.addNota=async function(){
+  const texto=document.getElementById('notaInput').value.trim();
+  if(!texto){alert('Escreva a anotação.');return;}
+  const secaoId=document.getElementById('notaSec').value||null;
+  setSS('syncing');
+  try{
+    await addDoc(collection(db,'notas'),{texto,secaoId,user:currentUser,ts:serverTimestamp()});
+    document.getElementById('notaInput').value='';
+    document.getElementById('notaSec').value='';
+    toast('Anotação salva ✓');setSS('online');
+  }catch(e){alert('Erro: '+e.message);}
+};
+window.delNota=async function(id){
+  if(!confirm('Remover esta anotação?'))return;
+  setSS('syncing');
+  try{await deleteDoc(doc(db,'notas',id));setSS('online');toast('Anotação removida.');}
+  catch(e){alert('Erro: '+e.message);}
 };
 
 window.toast=function(msg){const t=document.createElement('div');t.style.cssText='position:fixed;bottom:94px;left:50%;transform:translateX(-50%);background:#4ade80;color:#000;font-weight:700;padding:11px 22px;border-radius:30px;font-size:0.82rem;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:fadeUp .3s ease;white-space:nowrap';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500);};
